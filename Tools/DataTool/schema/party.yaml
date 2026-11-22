@@ -1,0 +1,20 @@
+# 스키마 — 파티 묶음(PartyConst). 열 순서 = Canon_Party.h.
+# kMaxMembers(8) · 패킷 줄 수 · 제목 바이트는 구조 상수(Database/GameData/PartyRules.h) — 코드에 남는다.
+bundle: party
+tabs:
+  PartyConst:
+    source: sheet
+    desc: "파티 상수(한 행) — 인원 · 초대 · 처치 보상 나눔 거리 · 쩔 보장 · 넘친 전리품 우선권 · 모집 글."
+    key: []
+    rows_exact: 1
+    columns:
+      - {key: max_members, type: u8, desc: "파티 인원(파티장 포함, 2~8)", min: 2, max: 8}
+      - {key: invite_expire_ms, type: u32, desc: "초대에 답할 시간(ms)", min: 1000}
+      - {key: offline_keep_sec, type: u32, desc: "접속이 끊긴 파티원을 남겨 두는 시간(초 — 다시 들어오면 그대로 파티원)"}
+      - {key: sync_interval_ms, type: u16, desc: "파티원 HP · MP · 위치를 모아 보내는 간격(ms)", min: 100}
+      - {key: exp_share_range, type: u8, desc: "그로시 · 경험치를 나눠 받는 거리(칸 — 몬스터가 쓰러진 자리에서. 파티가 아니어도 피해를 준 모두에게 같다)", min: 1}
+      - {key: carry_level_range, type: u8, desc: "쩔 보장 조건 — 함께 나눠 받는 파티원 중 최고 레벨과의 차이가 이 안"}
+      - {key: carry_min_exp_pct, type: u8, desc: "쩔 보장 — 피해를 조금만 줘도 파티가 받은 경험치(파티원 몫의 합)의 이 %는 받는다(0 = 보장 없음)", max: 100}
+      - {key: loot_owner_ms, type: u32, desc: "가방이 차 넘친 전리품 — 이 시간까지 주인(막타)만 줍는다(ms)"}
+      - {key: loot_party_ms, type: u32, desc: "가방이 차 넘친 전리품 — 이 시간까지 주인과 주인의 파티원만(그 뒤 누구나 · 30초에 사라진다, ms)"}
+      - {key: recruit_idle_sec, type: u32, desc: "모집 글 — 이 시간 동안 움직임(올림 · 고침 · 승인 · 들어옴)이 없으면 닫는다(초)", min: 60}

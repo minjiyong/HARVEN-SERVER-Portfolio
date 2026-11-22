@@ -1,0 +1,31 @@
+# 스키마 — 지형 묶음(Region · RegionSpawn). 열 순서 = Canon_Region.h.
+# 월드 · Zone 배치(kWorldWidth 2000 · kRegionSize 500 · kRegionCount 16)는 구조 상수 — 코드에 남는다.
+bundle: region
+tabs:
+  Region:
+    source: sheet
+    desc: "지역(Zone) 16곳 — 4 × 4, zone_id = 행 순서(0~15). 바이옴 · 난이도 · 필드 보스 · 옛길(길잡이 도착 · 요금)."
+    key: [zone_id]
+    id_lock: true
+    rows_exact: 16
+    columns:
+      - {key: zone_id, type: u16, desc: "지역 번호(0~15, 행 순서)", max: 15}
+      - {key: name, type: str, desc: "이름", nonempty: true}
+      - {key: biome, type: "enum:Biome", desc: "바이옴"}
+      - {key: tier, type: u8, desc: "난이도 1~5(★)", min: 1, max: 5}
+      - {key: boss_species, type: u16, desc: "필드 보스(0 = 없음)", ref: Monster, ref_zero: true}
+      - {key: boss_x, type: i16, desc: "보스 자리 x(월드 칸)"}
+      - {key: boss_y, type: i16, desc: "보스 자리 y"}
+      - {key: land_x, type: i16, desc: "길잡이 도착 x(그 지역 안 걸을 수 있는 칸)"}
+      - {key: land_y, type: i16, desc: "길잡이 도착 y"}
+      - {key: teleport_fee, type: u32, desc: "옛길 요금(0 = 목적지 아님 — 마을 지역)"}
+  RegionSpawn:
+    source: sheet
+    desc: "지역 스폰(지역마다 최대 4 — 구조 상수, 가중치 합 > 0). seq는 1부터 연속."
+    key: [zone_id, seq]
+    child_of: {tab: Region, key: zone_id, max: 4}
+    columns:
+      - {key: zone_id, type: u16, desc: "지역", ref: Region}
+      - {key: seq, type: u8, desc: "순서(1부터)", min: 1, max: 4}
+      - {key: species, type: u16, desc: "몬스터", ref: Monster}
+      - {key: weight, type: u8, desc: "가중치", min: 1}

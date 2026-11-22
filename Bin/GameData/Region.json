@@ -1,0 +1,18 @@
+{"table": "Region", "rows": [
+{"zone_id": 0, "name": "벨고라 설원", "biome": "eSnow", "tier": 3, "boss_species": 29, "boss_x": 266, "boss_y": 268, "land_x": 250, "land_y": 250, "teleport_fee": 800},
+{"zone_id": 1, "name": "올벤 숲", "biome": "eForest", "tier": 2, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 749, "land_y": 251, "teleport_fee": 300},
+{"zone_id": 2, "name": "크라스나 협곡", "biome": "eCanyon", "tier": 4, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 1249, "land_y": 249, "teleport_fee": 1500},
+{"zone_id": 3, "name": "바트라 화산", "biome": "eVolcanic", "tier": 5, "boss_species": 33, "boss_x": 1765, "boss_y": 265, "land_x": 1750, "land_y": 250, "teleport_fee": 3000},
+{"zone_id": 4, "name": "이레린 숲", "biome": "eFairy", "tier": 2, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 249, "land_y": 751, "teleport_fee": 300},
+{"zone_id": 5, "name": "데니차 들녘", "biome": "eMeadow", "tier": 1, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 749, "land_y": 754, "teleport_fee": 0},
+{"zone_id": 6, "name": "캄파나 폐허", "biome": "eRuins", "tier": 3, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 1249, "land_y": 751, "teleport_fee": 800},
+{"zone_id": 7, "name": "그락 요새", "biome": "eOrcFort", "tier": 3, "boss_species": 30, "boss_x": 1766, "boss_y": 766, "land_x": 1750, "land_y": 750, "teleport_fee": 800},
+{"zone_id": 8, "name": "모크라 늪지", "biome": "eSwamp", "tier": 3, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 249, "land_y": 1249, "teleport_fee": 800},
+{"zone_id": 9, "name": "야스나 초원", "biome": "eMeadow", "tier": 1, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 751, "land_y": 1249, "teleport_fee": 100},
+{"zone_id": 10, "name": "아스린 사막", "biome": "eDesert", "tier": 2, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 1250, "land_y": 1250, "teleport_fee": 300},
+{"zone_id": 11, "name": "가르 황무지", "biome": "eWasteland", "tier": 4, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 1750, "land_y": 1250, "teleport_fee": 1500},
+{"zone_id": 12, "name": "서약의 언덕", "biome": "eGraveyard", "tier": 4, "boss_species": 31, "boss_x": 265, "boss_y": 1765, "land_x": 250, "land_y": 1750, "teleport_fee": 1500},
+{"zone_id": 13, "name": "베레그 해안", "biome": "eBeach", "tier": 2, "boss_species": 0, "boss_x": 0, "boss_y": 0, "land_x": 750, "land_y": 1750, "teleport_fee": 300},
+{"zone_id": 14, "name": "굴개미 둔덕", "biome": "eAntHill", "tier": 3, "boss_species": 32, "boss_x": 1268, "boss_y": 1768, "land_x": 1250, "land_y": 1750, "teleport_fee": 800},
+{"zone_id": 15, "name": "칼둔 균열", "biome": "eHell", "tier": 5, "boss_species": 34, "boss_x": 1763, "boss_y": 1763, "land_x": 1751, "land_y": 1751, "teleport_fee": 3000}
+]}

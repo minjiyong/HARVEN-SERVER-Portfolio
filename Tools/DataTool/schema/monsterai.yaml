@@ -1,0 +1,107 @@
+# 스키마 — 몬스터 AI 묶음(MonsterSkill · MonsterSkillHit · MonsterAoE · MonsterAI · MonsterAISkill). 열 순서 = Canon_MonsterAI.h.
+# 몬스터 기술 수명: 시전(cast_ms 예고) → 발사(이동 · 장판 · 자기 강화) → 타격(MonsterSkillHit 시각표, 발사 기준) → 후딜(lock_ms) → 재사용 대기.
+bundle: monsterai
+tabs:
+  MonsterSkill:
+    source: sheet
+    desc: "몬스터 기술 — 시전(예고) → 발사(이동 · 장판) → 타격(MonsterSkillHit) → 후딜 → 재사용 대기. id는 1부터 연속 · 영구(새 기술은 끝에)."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u16, desc: "기술 id — 1부터 연속, 영구", min: 1}
+      - {key: name, type: str, desc: "이름(기획 메모 — 클라에 나가지 않는다)", nonempty: true}
+      - {key: target, type: "enum:MonsterSkillTarget", desc: "대상: Enemy(지금 대상) · Self(자기 중심) · Ally(동료 하나) · AllyGroup(동료 무리)"}
+      - {key: range_min, type: u8, desc: "시작 거리 최소(칸, 체비셰프 — 대상 기준)"}
+      - {key: range_max, type: u8, desc: "시작 거리 최대(칸). Self면 이 안에 적이 있을 때, Ally · AllyGroup이면 동료를 찾는 반경"}
+      - {key: cast_ms, type: u16, desc: "시전(예고) 시간 ms — 이 뒤에 발사", max: 10000}
+      - {key: lock_ms, type: u16, desc: "후딜 ms — 마지막 타격 뒤 멈춤", default: 300}
+      - {key: cooldown_ms, type: u32, desc: "재사용 대기 ms(시전 시작부터)"}
+      - {key: cooldown_jitter_ms, type: u16, desc: "대기에 0 ~ 이 값을 더한다(무리가 한꺼번에 쓰지 않게)", default: 0}
+      - {key: pattern, type: "enum:MonsterPattern", desc: "클라 예고 연출(차오름 끝 효과): None · Charge · Slam · Ranged · Leap", default: "None"}
+      - {key: fx, type: "enum:MonsterFx", desc: "시전 · 타격 효과(BossSlam = 보스 광역기 경고 · 큰 흔들림)", default: "None"}
+      - {key: move, type: "enum:MonsterMove", desc: "발사 순간 이동: None · Dash(돌진) · Leap(도약) · Blink(순간이동) · Retreat(물러서기)", default: "None"}
+      - {key: move_tiles, type: u8, desc: "이동 칸(Dash · Retreat)", default: 0, max: 8}
+      - {key: move_ms, type: u16, desc: "이동 시간 — Dash · Retreat: 칸당 ms(작을수록 빠르다) · Leap: 전체 ms", default: 0}
+      - {key: counterable, type: bool, desc: "예고 중 기절 · 빙결 · 반격 · 무력화에 끊긴다", default: true}
+      - {key: aoe, type: u16, desc: "발사 순간 놓는 장판(MonsterAoE.id, 0 = 없음)", ref: MonsterAoE, ref_zero: true, default: 0}
+      - {key: aoe_anchor, type: "enum:HitAnchor", desc: "장판 자리(발사 순간): Caster(그 순간 자기 자리 — 돌진 · 도약 뒤면 도착한 자리) · Aim(시전 시작 때 조준 칸) · Target(그 순간 대상 자리)", default: "Caster"}
+      - {key: self_status, type: "enum:StatusId", desc: "발사 순간 자신에게 거는 상태(Empower · Fortify · Swift …)", default: "None"}
+      - {key: self_status_ms, type: u16, desc: "그 상태 시간 ms", default: 0}
+      - {key: self_status_power, type: u16, desc: "강화 세기 %(Empower · Fortify · Swift — Fortify는 90 이하)", default: 0}
+  MonsterSkillHit:
+    source: sheet
+    desc: "몬스터 기술 타격(기술마다 최대 8 — 구조 상수). seq는 1부터 연속. 시각은 발사 기준."
+    key: [skill_id, seq]
+    child_of: {tab: MonsterSkill, key: skill_id, max: 8}
+    columns:
+      - {key: skill_id, type: u16, desc: "기술 id", ref: MonsterSkill}
+      - {key: seq, type: u8, desc: "타격 순서(1부터)", min: 1, max: 8}
+      - {key: at_ms, type: u16, desc: "타격 시각 ms(발사 기준)"}
+      - {key: warn_ms, type: u16, desc: "예고를 몇 ms 앞서(0 = 예고 없음 · 시전 시작보다 앞이면 시전 시작에)", default: 0}
+      - {key: coeff, type: u16, desc: "피해 = 공격력 × %(0 = 피해 없음 — 상태 · 예고만)"}
+      - {key: shape, type: "enum:HitShape", desc: "모양: Target(한 칸) · Circle · Cone · Line · Ring"}
+      - {key: anchor, type: "enum:HitAnchor", desc: "기준점: Caster(그 순간 자기 자리 — 돌진 · 도약 뒤면 도착한 자리) · Aim(시전 시작 때 조준 칸) · Target(그 순간 대상 자리). 예고가 있으면 예고를 보내는 순간에 정한다(예고한 자리에 맞으므로 피할 수 있다)"}
+      - {key: a, type: u8, desc: "반경 · 길이(칸). 직선이 0이면 이번 이동 경로 길이"}
+      - {key: b, type: u8, desc: "부채꼴 반각(°) · 직선 폭 · 고리 안쪽 반경", default: 0}
+      - {key: along, type: i8, desc: "중심을 조준 방향으로 이만큼(칸)", default: 0}
+      - {key: react, type: "enum:HitReact", desc: "플레이어 반응: None · Knockback(밀기) · Pull(당기기) — push칸", default: "None"}
+      - {key: push, type: u8, desc: "밀기 · 당기기 칸", default: 0, max: 4}
+      - {key: status, type: "enum:StatusId", desc: "맞은 플레이어에게 거는 상태", default: "None"}
+      - {key: status_ms, type: u16, desc: "상태 시간 ms", default: 0}
+      - {key: status_stacks, type: u8, desc: "상태 중첩", default: 1}
+      - {key: max_targets, type: u8, desc: "최대 대상(0 = 무제한)", default: 0}
+  MonsterAoE:
+    source: sheet
+    desc: "몬스터 장판(지면 효과 · 오라) — 놓인 자리(follow면 주인을 따라)에서 간격마다 적에게 피해 · 상태, 동료에게 회복 · 강화. id는 1부터 연속 · 영구."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u16, desc: "장판 id — 1부터 연속, 영구", min: 1}
+      - {key: name, type: str, desc: "이름(기획 메모)", nonempty: true}
+      - {key: duration_ms, type: u32, desc: "지속 ms(오라는 깨어 있는 동안 다시 깐다)", min: 1, max: 600000}
+      - {key: interval_ms, type: u16, desc: "틱 간격 ms(200 이상)", min: 200}
+      - {key: first_ms, type: u16, desc: "놓인 뒤 첫 틱까지 ms", default: 0}
+      - {key: radius, type: u8, desc: "반경(칸, 체비셰프)", max: 8}
+      - {key: affect, type: "enum:AoeAffect", desc: "닿는 것: Enemies(플레이어) · Allies(몬스터) · All"}
+      - {key: coeff, type: u16, desc: "적 틱 피해 = 놓은 몬스터 공격력 × %", default: 0}
+      - {key: heal_percent, type: u8, desc: "동료 틱 회복 = 최대 HP × %", default: 0, max: 100}
+      - {key: status, type: "enum:StatusId", desc: "닿은 대상에게 거는 상태(적 = 해로운 상태, 동료 = 강화)", default: "None"}
+      - {key: status_ms, type: u16, desc: "상태 시간 ms", default: 0}
+      - {key: status_power, type: u16, desc: "강화 세기 %(Empower · Fortify · Swift — Fortify는 90 이하)", default: 0}
+      - {key: status_stacks, type: u8, desc: "상태 중첩", default: 1}
+      - {key: follow, type: bool, desc: "주인을 따라 움직인다(오라)", default: false}
+      - {key: owner_bound, type: bool, desc: "주인이 죽거나 잠들면 사라진다", default: true}
+      - {key: fx, type: "enum:MonsterFx", desc: "틱마다 효과(가운데 · 닿은 대상)", default: "None"}
+  MonsterAI:
+    source: sheet
+    desc: "종족의 행동 — 행동 트리 종류 · 감지 · 돕기 · 보스 단계 · 오라. 행이 없는 종족은 근접 · 기술 없음(선공이면 감지 3칸)."
+    key: [monster_id]
+    columns:
+      - {key: monster_id, type: u16, desc: "종족 id(Monster.id)", ref: Monster}
+      - {key: ai, type: "enum:MonsterAiType", desc: "행동 트리: Melee · Ranged · Support · Boss · Stationary · Dummy"}
+      - {key: aggro_range, type: u8, desc: "선공 감지(칸) — 0 = 맞을 때만 반격", max: 9}
+      - {key: assist_range, type: u8, desc: "이 칸 안의 동료가 싸우기 시작하면 함께 싸운다(0 = 돕지 않는다)", default: 0, max: 9}
+      - {key: keep_range, type: u8, desc: "원거리 · 지원: 대상과 지키는 거리(0 = 붙는다)", default: 0, max: 8}
+      - {key: skill_gap_ms, type: u16, desc: "기술 사이 최소 간격 ms(후딜 끝부터)", default: 1500}
+      - {key: first_skill_ms, type: u16, desc: "전투 시작 뒤 첫 기술까지 ms", default: 0}
+      - {key: phase2_hp, type: u8, desc: "보스 2단계 문턱(체력 %, 0 = 없음)", default: 0, max: 99}
+      - {key: phase3_hp, type: u8, desc: "보스 3단계 문턱(체력 %, phase2_hp보다 작게)", default: 0, max: 99}
+      - {key: phase2_skill, type: u16, desc: "2단계에 들어설 때 곧바로 쓰는 기술(MonsterSkill.id, 0 = 없음 — 끊기지 않게 counterable 끄기 권장)", ref: MonsterSkill, ref_zero: true, default: 0}
+      - {key: phase3_skill, type: u16, desc: "3단계에 들어설 때 곧바로 쓰는 기술(2단계를 건너뛰어도 이것, 0 = 없음)", ref: MonsterSkill, ref_zero: true, default: 0}
+      - {key: aura, type: u16, desc: "깨어 있는 동안 두르는 오라(MonsterAoE.id — follow, 0 = 없음)", ref: MonsterAoE, ref_zero: true, default: 0}
+  MonsterAISkill:
+    source: sheet
+    desc: "종족의 기술 칸(최대 8 — 구조 상수). 높은 우선순위부터 조건이 맞는 칸 중 가중치 무작위로 쓴다. seq는 1부터 연속."
+    key: [monster_id, seq]
+    child_of: {tab: MonsterAI, key: monster_id, max: 8}
+    columns:
+      - {key: monster_id, type: u16, desc: "종족 id", ref: MonsterAI}
+      - {key: seq, type: u8, desc: "칸 순서(1부터)", min: 1, max: 8}
+      - {key: skill_id, type: u16, desc: "기술(MonsterSkill.id)", ref: MonsterSkill}
+      - {key: priority, type: u8, desc: "우선순위(높을수록 먼저 본다)", default: 0}
+      - {key: weight, type: u8, desc: "같은 우선순위끼리 무작위 가중치", default: 1, min: 1}
+      - {key: phase_min, type: u8, desc: "이 단계부터(보스 1 ~ 3)", default: 1, min: 1, max: 3}
+      - {key: phase_max, type: u8, desc: "이 단계까지", default: 3, min: 1, max: 3}
+      - {key: hp_below, type: u8, desc: "내 체력이 이 % 이하일 때만(0 = 조건 없음)", default: 0, max: 100}
+      - {key: allies_min, type: u8, desc: "기술 사거리 안 동료가 이 수 이상일 때만", default: 0}
+      - {key: chance, type: u8, desc: "쓸 수 있을 때 이 확률(%)로만", default: 100, min: 1, max: 100}

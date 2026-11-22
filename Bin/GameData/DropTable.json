@@ -1,0 +1,11 @@
+{"table": "DropTable", "rows": [
+{"id": 1, "no_drop_weight": 700},
+{"id": 2, "no_drop_weight": 620},
+{"id": 3, "no_drop_weight": 600},
+{"id": 4, "no_drop_weight": 520},
+{"id": 5, "no_drop_weight": 480},
+{"id": 6, "no_drop_weight": 0},
+{"id": 7, "no_drop_weight": 0},
+{"id": 8, "no_drop_weight": 0},
+{"id": 9, "no_drop_weight": 0}
+]}

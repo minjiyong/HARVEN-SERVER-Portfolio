@@ -1,0 +1,12 @@
+{"table": "GuildShop", "rows": [
+{"id": 1, "item_id": 1, "count": 10, "price": 10, "min_level": 1, "weekly_limit": 5},
+{"id": 2, "item_id": 10, "count": 3, "price": 8, "min_level": 1, "weekly_limit": 5},
+{"id": 3, "item_id": 8, "count": 5, "price": 15, "min_level": 2, "weekly_limit": 5},
+{"id": 4, "item_id": 11, "count": 3, "price": 12, "min_level": 2, "weekly_limit": 3},
+{"id": 5, "item_id": 12, "count": 2, "price": 20, "min_level": 3, "weekly_limit": 3},
+{"id": 6, "item_id": 13, "count": 1, "price": 60, "min_level": 3, "weekly_limit": 2},
+{"id": 7, "item_id": 9, "count": 3, "price": 30, "min_level": 4, "weekly_limit": 3},
+{"id": 8, "item_id": 59, "count": 1, "price": 120, "min_level": 5, "weekly_limit": 1},
+{"id": 9, "item_id": 14, "count": 1, "price": 250, "min_level": 7, "weekly_limit": 1},
+{"id": 10, "item_id": 60, "count": 1, "price": 200, "min_level": 8, "weekly_limit": 1}
+]}

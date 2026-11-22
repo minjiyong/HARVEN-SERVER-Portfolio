@@ -1,0 +1,21 @@
+{"table": "Status", "rows": [
+{"id": "None", "name": "", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 0, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#FFFFFF"},
+{"id": "Stun", "name": "기절", "debuff": true, "blocks_move": true, "blocks_attack": true, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#FFE070"},
+{"id": "Freeze", "name": "빙결", "debuff": true, "blocks_move": true, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#8AD8FF"},
+{"id": "Burn", "name": "화상", "debuff": true, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 1000, "tick_percent": 18, "slow_percent": 0, "color": "#FF7A2A"},
+{"id": "Poison", "name": "중독", "debuff": true, "blocks_move": false, "blocks_attack": false, "max_stacks": 5, "tick_ms": 1000, "tick_percent": 8, "slow_percent": 0, "color": "#7ADF4A"},
+{"id": "Slow", "name": "둔화", "debuff": true, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 40, "color": "#9AB4D0"},
+{"id": "Guard", "name": "철벽 태세", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 30, "color": "#FFC860"},
+{"id": "Ambush", "name": "기습", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#E8EEF6"},
+{"id": "Evade", "name": "잔상", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#C8D2E0"},
+{"id": "Marked", "name": "각인 표식", "debuff": true, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#6AE8FF"},
+{"id": "Oath", "name": "서약 해방", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#F2C47C"},
+{"id": "Rally", "name": "함성", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#F2C47C"},
+{"id": "Veil", "name": "밤 장막", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#8A96A8"},
+{"id": "Taunt", "name": "도발", "debuff": true, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#E0604E"},
+{"id": "Broken", "name": "무력화", "debuff": true, "blocks_move": true, "blocks_attack": true, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#F2C47C"},
+{"id": "Clone", "name": "먹물 분신", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 3, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#8A96A8"},
+{"id": "Empower", "name": "광폭", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#E8705E"},
+{"id": "Fortify", "name": "굳건", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#9AA8C0"},
+{"id": "Swift", "name": "질풍", "debuff": false, "blocks_move": false, "blocks_attack": false, "max_stacks": 1, "tick_ms": 0, "tick_percent": 0, "slow_percent": 0, "color": "#7AD8C8"}
+]}

@@ -1,0 +1,68 @@
+# 스키마 — 퀘스트 묶음(Quest · QuestObjective · Poi · Chapter). 열 순서 = Canon_Quest.h.
+bundle: quest
+tabs:
+  Quest:
+    source: sheet
+    desc: "퀘스트(id 1~255). id는 DB에 저장된다 — 영구. 메인 이야기는 id 순서대로 앞 메인이 선행 퀘스트."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u16, desc: "퀘스트 id(1~255), 영구", min: 1, max: 255}
+      - {key: kind, type: "enum:QuestKind", desc: "종류(Main · Side · Daily · Class)"}
+      - {key: chapter, type: u8, desc: "메인 이야기 장(1~5), 그 밖은 0", max: 5}
+      - {key: name, type: str, desc: "이름", nonempty: true}
+      - {key: giver, type: u16, desc: "주는 NPC", ref: Npc}
+      - {key: turn_in, type: u16, desc: "보고할 NPC(0 = 목표를 이루는 순간 완료)", ref: Npc, ref_zero: true}
+      - {key: min_level, type: u8, desc: "받는 최소 레벨(1~50)", min: 1, max: 50}
+      - {key: prereq, type: u16, desc: "선행 퀘스트(0 = 없음)", ref: Quest, ref_zero: true}
+      - {key: class_mask, type: "mask:ClassId", desc: "받을 수 있는 직업(비우면 모두)", default: ""}
+      - {key: summary, type: str, desc: "일지 한 줄"}
+      - {key: offer, type: str, desc: "받기 전 대사(주는 NPC)"}
+      - {key: during, type: str, desc: "진행 중 대사"}
+      - {key: done, type: str, desc: "완료 대사(보고할 NPC)"}
+      - {key: reward_exp, type: u32, desc: "보상 경험치"}
+      - {key: reward_exp_pct, type: u8, desc: "> 0이면 지금 레벨 필요 경험치의 N%(반복 퀘스트)"}
+      - {key: reward_adena, type: u32, desc: "보상 그로시"}
+      - {key: reward_item_knight, type: u16, desc: "보상 아이템 — 서약기사(0 = 없음)", ref: Item, ref_zero: true}
+      - {key: reward_item_engraver, type: u16, desc: "보상 아이템 — 각인술사", ref: Item, ref_zero: true}
+      - {key: reward_item_hunter, type: u16, desc: "보상 아이템 — 밤사냥꾼", ref: Item, ref_zero: true}
+      - {key: reward_count, type: u16, desc: "보상 아이템 개수(≥ 1)", min: 1}
+      - {key: reward_rarity, type: "enum:Rarity", desc: "장비 보상의 최소 희귀도"}
+      - {key: cooldown_min, type: u16, desc: "반복 퀘스트 다시 받기까지(분, 0 = 한 번뿐)"}
+  QuestObjective:
+    source: sheet
+    desc: "퀘스트 목표(퀘스트마다 최대 3 — 구조 상수). seq는 1부터 연속."
+    key: [quest_id, seq]
+    child_of: {tab: Quest, key: quest_id, max: 3}
+    columns:
+      - {key: quest_id, type: u16, desc: "퀘스트", ref: Quest}
+      - {key: seq, type: u8, desc: "순서(1부터)", min: 1, max: 3}
+      - {key: kind, type: "enum:ObjKind", desc: "목표 종류(None 불가)"}
+      - {key: target, type: u16, desc: "대상 — Kill · Collect · Boss: 몬스터 / Talk: NPC / Explore: Poi"}
+      - {key: count, type: u16, desc: "횟수"}
+      - {key: zone, type: u8, desc: "지역(Region.zone_id) — 255 = 어디서나"}
+      - {key: chance, type: u8, desc: "수집 확률(%, 한 마리당)", max: 100}
+      - {key: label, type: "str?", desc: "표시 이름(수집물 이름 — 비우면 종류로 만든다)", default: null}
+      - {key: icon, type: "enum:QuestIcon", desc: "수집물 아이콘"}
+  Poi:
+    source: sheet
+    desc: "탐험 장소(Explore 목표). 마을 밖 걸을 수 있는 칸."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u16, desc: "장소 id, 영구", min: 1}
+      - {key: name, type: str, desc: "이름", nonempty: true}
+      - {key: x, type: i16, desc: "월드 칸 x"}
+      - {key: y, type: i16, desc: "월드 칸 y"}
+      - {key: radius, type: u8, desc: "들어섰다고 볼 반경(칸, > 0)", min: 1}
+      - {key: flavor, type: str, desc: "처음 들어섰을 때 이야기 한 줄"}
+  Chapter:
+    source: sheet
+    desc: "메인 이야기 장 제목 카드. id 0 = 빈 장(원본 그대로), 1~5."
+    key: [id]
+    rows_exact: 6
+    columns:
+      - {key: id, type: u8, desc: "장(0부터 연속)", max: 5}
+      - {key: title, type: str, desc: "제목"}
+      - {key: place, type: str, desc: "장소"}
+      - {key: line, type: str, desc: "제목 아래 한 줄"}

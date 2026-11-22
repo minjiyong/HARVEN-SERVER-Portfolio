@@ -1,0 +1,16 @@
+{"table": "GuildAchievement", "rows": [
+{"id": 1, "name": "첫 걸음", "kind": "Kills", "target": 100, "seals": 50, "exp": 300, "title_id": 0},
+{"id": 2, "name": "천 번의 사냥", "kind": "Kills", "target": 1000, "seals": 150, "exp": 1000, "title_id": 5},
+{"id": 3, "name": "만 번의 사냥", "kind": "Kills", "target": 10000, "seals": 500, "exp": 5000, "title_id": 0},
+{"id": 4, "name": "첫 토벌", "kind": "BossKills", "target": 1, "seals": 80, "exp": 500, "title_id": 0},
+{"id": 5, "name": "거인의 무덤", "kind": "BossKills", "target": 30, "seals": 400, "exp": 4000, "title_id": 6},
+{"id": 6, "name": "약속의 시작", "kind": "Missions", "target": 1, "seals": 50, "exp": 300, "title_id": 0},
+{"id": 7, "name": "열 번의 약속", "kind": "Missions", "target": 10, "seals": 200, "exp": 2000, "title_id": 7},
+{"id": 8, "name": "새 얼굴과 함께", "kind": "Coop", "target": 50, "seals": 100, "exp": 600, "title_id": 0},
+{"id": 9, "name": "함께 걷는 길", "kind": "Coop", "target": 500, "seals": 300, "exp": 3000, "title_id": 8},
+{"id": 10, "name": "한 달의 동행", "kind": "Days", "target": 30, "seals": 200, "exp": 1500, "title_id": 9},
+{"id": 11, "name": "일주일 출석", "kind": "Attend", "target": 7, "seals": 100, "exp": 700, "title_id": 0},
+{"id": 12, "name": "한 달 출석", "kind": "Attend", "target": 30, "seals": 300, "exp": 3000, "title_id": 10},
+{"id": 13, "name": "다섯 번째 깃발", "kind": "Level", "target": 5, "seals": 200, "exp": 0, "title_id": 0},
+{"id": 14, "name": "스물의 결사", "kind": "Members", "target": 20, "seals": 150, "exp": 1000, "title_id": 11}
+]}

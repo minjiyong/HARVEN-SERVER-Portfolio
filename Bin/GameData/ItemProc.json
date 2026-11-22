@@ -1,0 +1,11 @@
+{"table": "ItemProc", "rows": [
+{"id": "None", "name": "", "chance": 0, "chance_emp": 0, "power": 0, "power_emp": 0, "color": "#FFFFFF"},
+{"id": "Thunder", "name": "천둥의 일격", "chance": 12, "chance_emp": 18, "power": 60, "power_emp": 90, "color": "#9AD8FF"},
+{"id": "Lifesteal", "name": "생명 흡수", "chance": 100, "chance_emp": 100, "power": 5, "power_emp": 8, "color": "#FF5A6A"},
+{"id": "FrostTouch", "name": "서리 손길", "chance": 12, "chance_emp": 18, "power": 0, "power_emp": 0, "color": "#8AD8FF"},
+{"id": "Execution", "name": "처형자", "chance": 100, "chance_emp": 100, "power": 30, "power_emp": 50, "color": "#FF8A3A"},
+{"id": "Echo", "name": "메아리", "chance": 12, "chance_emp": 18, "power": 40, "power_emp": 60, "color": "#9AD8C8"},
+{"id": "Guardian", "name": "서약의 방패", "chance": 10, "chance_emp": 15, "power": 0, "power_emp": 0, "color": "#FFD870"},
+{"id": "Ember", "name": "잔불", "chance": 15, "chance_emp": 22, "power": 0, "power_emp": 0, "color": "#FF7A2A"},
+{"id": "Venom", "name": "맹독", "chance": 20, "chance_emp": 30, "power": 0, "power_emp": 0, "color": "#7ADF4A"}
+]}

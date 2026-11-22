@@ -1,0 +1,283 @@
+# 경제 1차 장비 라인업 — 생성기 입력(튜닝 데이터). 계약: Shared/Document/ECONOMY.md
+#
+#   python3 Tools/DataTool/datatool.py lineup [--dry-run] [--seed-econ]
+#
+# lineup은 이 파일로 Bin/GameData/Item.json의 장비 행 · 재료 6행과 CraftRecipe.json을 다시 만든다(dt.export.write —
+# manifest · _src.json · ids.lock · Gen/ItemIds.h도 함께). 소비품 · 화폐 행은 그대로 둔다(새 열은 기본값).
+#  · 기존 장비는 code_name으로 찾아 id · 이름 · 아이콘 · 판매가(buy_price) · 세트를 그대로 둔다. 새 장비 id는 67부터 차례로.
+#  · 등급 · 단 · 경로 · 귀속 · 단계(tier) · 착용 레벨 · 직업 · 성능 · 매입가(sell_price)는 아래 표와 공식으로 매번 다시 계산한다.
+#  · 퀘스트 보상(Quest.json)이면 route에 Quest, 상점(Shop.json)이 팔면 Shop을 자동으로 더한다.
+#  · Item.json의 장비가 이 파일에 없으면 멈춘다(id는 영구 — 지우지 않는다).
+# --seed-econ: 아래 seed 절로 LootConst · TierLoot · EliteGear · BossLoot · Dismantle도 쓴다(시트 파일이 생기기 전 첫 값 — 그 뒤에는 시트가 원본).
+#
+# 등급(ItemGrade) 이름: eNone 일반 · eRare 고급 · eEpic 희귀 · eUnique 영웅 · eLegendary 전설 · eMythic 신화. 단: 1 하 · 2 중 · 3 상.
+
+grades:                       # 등급 순서 = 곡선 배열 순서
+  eNone:      {label: 일반, tier: 1, req_level: 0}
+  eRare:      {label: 고급, tier: 2, req_level: 5}
+  eEpic:      {label: 희귀, tier: 3, req_level: 12}
+  eUnique:    {label: 영웅, tier: 4, req_level: 18}
+  eLegendary: {label: 전설, tier: 5, req_level: 26}
+  eMythic:    {label: 신화, tier: 5, req_level: 35}
+
+# ── 성능 곡선 ────────────────────────────────────────────────────────────────
+# 무기 공격력: 직업별 「하」 기준값(등급 순). 같은 등급 안은 하 × r^(단-1), r = sqrt(다음 등급 하 / 이 등급 하) → 상 = 다음 등급 하.
+weapon_base:
+  Knight:      [3, 6, 12, 22, 36, 55]
+  Engraver:    [3, 8, 15, 26, 34, 44]
+  NightHunter: [3, 8, 15, 25, 33, 42]
+# 방어구 · 장신구: 몸통 기준 방어 지수(등급 하) — 같은 방식으로 단 보간 → 부위 배수 → 합(최소 1)을 계열 성향으로 방어 · 마방에 나눈다.
+armor_base: [3, 6, 10, 15, 22, 32]
+part_mult: {Helmet: 0.55, Armor: 1.0, Gloves: 0.4, Boots: 0.4, Cloak: 0.45, Necklace: 0.45, Ring: 0.35}
+tendency:                     # [방어 몫, 마법 방어 몫]
+  방어: [0.90, 0.10]
+  마법: [0.35, 0.65]
+  균형: [0.65, 0.35]
+# 무기 종류 → 직업(모든 무기는 한 직업)
+weapon_class: {Sword: Knight, Greatsword: Knight, Saber: Knight, Staff: Engraver, Dagger: NightHunter}
+
+# ── 얻는 길 · 귀속 ────────────────────────────────────────────────────────────
+# (등급) → [하, 중, 상]의 route. 빈 글자 = 1차 경로 없음. 퀘스트 보상이면 +Quest, 상점품이면 +Shop(자동).
+routes:
+  eNone:      [Field, Field|Craft, Craft]
+  eRare:      [Field|Craft, Craft, Elite]
+  eEpic:      [Field|Elite|Craft, Craft, Elite]
+  eUnique:    [Elite|Craft, "", Boss]        # 영웅-중은 2차(불씨 레시피) 전까지 경로 없음
+  eLegendary: [Boss, Boss, Boss]
+  eMythic:    [Boss, Boss, Boss]
+# 획득 귀속 칸: [등급, 단] — 단 0 = 그 등급 모든 단
+bind_acquire: [[eUnique, 3], [eLegendary, 0], [eMythic, 0]]
+
+# ── 제작(CraftRecipe) ─────────────────────────────────────────────────────────
+# 무기 레시피(기획 G절). 방어구 = 재료 개수 · 수수료 × 0.5(올림), 장신구 = 방어구 + (희귀 이상) 같은 단계 결정 accessory_crystal_count개.
+# 재료: 61 하급 사냥 정수 · 62 중급 · 63 상급 · 64 잿빛 결정 · 65 짙은 잿빛 결정 · 66 장비 파편.
+craft:
+  - {grade: eNone, rank: 2, fee: 100,  in: [[61, 15], [66, 2]]}
+  - {grade: eNone, rank: 3, fee: 300,  in: [[61, 40], [66, 3]]}
+  - {grade: eRare, rank: 1, fee: 500,  in: [[61, 60], [66, 8]]}
+  - {grade: eRare, rank: 2, fee: 1200, in: [[61, 150], [64, 5], [66, 15]]}
+  - {grade: eEpic, rank: 1, fee: 2000, in: [[62, 80], [64, 10], [66, 30]]}
+  - {grade: eEpic, rank: 2, fee: 5000, in: [[62, 200], [64, 30], [66, 60]]}
+  - {grade: eUnique, rank: 1, fee: 8000, in: [[63, 150], [65, 20], [66, 80]]}
+armor_craft_ratio: 0.5
+accessory_crystal: {eEpic: 64, eUnique: 65}
+accessory_crystal_count: 6
+
+# ── 매입가(sell_price) ────────────────────────────────────────────────────────
+# 제작 가능품(route에 Craft · 레시피 있음) = floor(그 부위 수수료 × craft_percent ÷ 희귀도 sell_percent) — 만들어 되팔아 남지 않게(R134).
+# 그 밖 = 등급 · 단 곡선(무기 기준) × 부위 배수(반올림). 상점품의 판매가(buy_price)는 그대로 — 되팔기 검사(R090)를 생성기가 먼저 본다.
+sell:
+  craft_percent: 50
+  curve:                      # 등급: [하, 중, 상]
+    eNone:      [30, 45, 70]
+    eRare:      [200, 330, 520]
+    eEpic:      [600, 1000, 1500]
+    eUnique:    [2000, 2600, 4000]
+    eLegendary: [8000, 12000, 20000]
+    eMythic:    [30000, 45000, 70000]
+  part_factor: {weapon: 1.0, armor: 0.5, accessory: 0.5}
+
+# ── 아이콘(새 장비 — 그림이 생기기 전 같은 종류의 기존 아이콘) ───────────────────
+icons:
+  weapon:                     # 무기 종류: [일반, 고급, 희귀, 영웅, 전설, 신화]
+    Sword:      [10, 11, 12, 13, 14, 14]
+    Greatsword: [14, 14, 14, 14, 14, 18]
+    Saber:      [16, 16, 16, 16, 16, 16]
+    Staff:      [40, 42, 43, 44, 45, 45]
+    Dagger:     [41, 46, 47, 48, 49, 49]
+  armor:                      # 부위: [일반, 고급, 희귀, 영웅, 전설, 신화]
+    Helmet:   [50, 51, 52, 68, 72, 72]
+    Armor:    [53, 54, 57, 69, 73, 73]
+    Gloves:   [58, 59, 59, 70, 76, 76]
+    Boots:    [60, 61, 61, 71, 77, 77]
+    Cloak:    [62, 63, 63, 78, 78, 78]
+    Necklace: [64, 65, 65, 74, 74, 74]
+    Ring:     [66, 67, 67, 75, 79, 79]
+
+# ── 재료 6종(id 고정 · max_stack 999 · rank 0 · 경로 없음). grade는 표시 색 전용 ──────────────
+materials:
+  - {id: 61, code: HuntEssenceLow,  name: Low Hunt Essence,  display: 하급 사냥 정수, grade: eNone,    bind: eNone,    sell: 2,  icon: 80}
+  - {id: 62, code: HuntEssenceMid,  name: Mid Hunt Essence,  display: 중급 사냥 정수, grade: eRare,    bind: eNone,    sell: 4,  icon: 81}
+  - {id: 63, code: HuntEssenceHigh, name: High Hunt Essence, display: 상급 사냥 정수, grade: eEpic,    bind: eNone,    sell: 8,  icon: 82}
+  - {id: 64, code: AshCrystal,      name: Ash Crystal,       display: 잿빛 결정,     grade: eEpic,    bind: eNone,    sell: 20, icon: 83}
+  - {id: 65, code: DeepAshCrystal,  name: Deep Ash Crystal,  display: 짙은 잿빛 결정, grade: eUnique,  bind: eNone,    sell: 50, icon: 84}
+  - {id: 66, code: GearShard,       name: Gear Shard,        display: 장비 파편,     grade: eNone,    bind: eAcquire, sell: 0,  icon: 85}
+material_stack: 999
+
+# ── 무기 — 직업 · 등급마다 [하, 중, 상] ─────────────────────────────────────────
+# code만 쓰면 기존 장비(Item.json의 code_name). 새 장비는 code · name(영문 ≤ 19) · display · kind.
+weapons:
+  Knight:
+    eNone:
+      - {code: PracticeSword,  display: 연습용 목검}
+      - {code: CopperSword,    name: Copper Longsword, display: 구리 장검, kind: Sword}
+      - {code: GuardSword,     name: Guard Longsword,  display: 경비대 장검, kind: Sword}
+    eRare:
+      - {code: IronSword,      display: 철검}
+      - {code: TemperedSword,  name: Tempered Sword,   display: 단련 철검, kind: Sword}
+      - {code: GrakSaber,      name: Grak Raider Saber, display: 그락 약탈도, kind: Saber}
+    eEpic:
+      - {code: SteelSword,     display: 강철 장검}
+      - {code: CavalrySaber,   display: 기병 곡도}
+      - {code: OrderSword,     name: Order Longsword,  display: 기사단 장검, kind: Sword}
+  Engraver:
+    eNone:
+      - {code: ApprenticeStaff, display: 견습생의 지팡이}
+      - {code: AshStaff,        name: Ash Staff,        display: 물푸레 지팡이, kind: Staff}
+      - {code: ScribeStaff,     name: Scribe Staff,     display: 필경사의 지팡이, kind: Staff}
+    eRare:
+      - {code: OakStaff,        display: 참나무 지팡이}
+      - {code: KnottedStaff,    name: Knotted Staff,    display: 옹이 지팡이, kind: Staff}
+      - {code: LeafStaff,       name: Leaf Staff,       display: 잎새 지팡이, kind: Staff}
+    eEpic:
+      - {code: EngravedStaff,   display: 각인 지팡이}
+      - {code: SilverRuneStaff, name: Silver Rune Staff, display: 은각인 지팡이, kind: Staff}
+      - {code: RuinRuneStaff,   name: Ruin Rune Staff,  display: 폐허 각인 지팡이, kind: Staff}
+  NightHunter:
+    eNone:
+      - {code: HunterDagger,    display: 사냥용 단검}
+      - {code: BoneDagger,      name: Bone Dagger,      display: 뼈 단검, kind: Dagger}
+      - {code: ForesterDagger,  name: Forester Dagger,  display: 숲지기 단검, kind: Dagger}
+    eRare:
+      - {code: BlackironDagger, display: 흑철 단검}
+      - {code: DobranDagger,    display: 도브란의 단검}
+      - {code: RaiderDagger,    name: Raider Dagger,    display: 약탈자 단검, kind: Dagger}
+    eEpic:
+      - {code: MoonlightDagger, display: 월광 단검}
+      - {code: SpiderDagger,    name: Spider Venom Dagger, display: 거미독 단검, kind: Dagger}
+      - {code: ScorpionDagger,  name: Scorpion Dagger,  display: 전갈꼬리 단검, kind: Dagger}
+
+# ── 방어구 · 장신구 — 등급마다 계열(단 · 성향). 계열 하나 = 투구 · 갑옷 · 장갑 · 장화 · 망토 · 목걸이 · 반지 ─────────
+# 적지 않은 부위는 자동: 표시 「<계열> <부위>」 · 영문 「<en> <part_en>」 · code <code><Part>.
+part_names:                   # 부위: [표시, 영문, code 꼬리]
+  Helmet:   [투구, Helm, Helm]
+  Armor:    [갑옷, Armor, Armor]
+  Gloves:   [장갑, Gloves, Gloves]
+  Boots:    [장화, Boots, Boots]
+  Cloak:    [망토, Cloak, Cloak]
+  Necklace: [목걸이, Amulet, Amulet]
+  Ring:     [반지, Ring, Ring]
+armor:
+  eNone:
+    - family: 여행자
+      rank: 1
+      tendency: 균형
+      pieces:
+        Helmet:   {code: LeatherHood,   display: 가죽 두건}
+        Armor:    {code: PaddedArmor,   display: 누빔 갑옷}
+        Gloves:   {code: LeatherGloves, display: 가죽 장갑}
+        Boots:    {code: LeatherBoots,  display: 가죽 장화}
+        Cloak:    {code: TravelerCloak, display: 여행자의 망토}
+        Necklace: {code: BoneCharm,     display: 뼈 부적}
+        Ring:     {code: CopperRing,    display: 구리 반지}
+    - {family: 경비대, en: Guard, code: Guard, rank: 2, tendency: 방어}
+    - {family: 개척민, en: Settler, code: Settler, rank: 3, tendency: 마법}
+  eRare:
+    - family: 사슬
+      en: Chain
+      code: Chain
+      rank: 1
+      tendency: 방어
+      pieces:
+        Helmet: {code: IronHelm,  display: 철 투구}
+        Armor:  {code: ChainMail, display: 사슬 갑옷}
+    - family: 각인사                 # 고급-하 추가 갑옷 한 벌(기존 — 퀘스트 보상)
+      rank: 1
+      tendency: 마법
+      only: [Armor]
+      pieces:
+        Armor: {code: EngraverRobe, display: 각인사의 법복}
+    - {family: 단련, en: Tempered, code: Tempered, rank: 2, tendency: 마법}
+    - {family: 그락 약탈자, en: Grak Raider, code: GrakRaider, rank: 3, tendency: 균형}
+  eEpic:
+    - family: 사냥꾼
+      en: Hunter
+      code: Hunter
+      rank: 1
+      tendency: 균형
+      pieces:
+        Helmet:   {code: HunterHood,    name: Hunter Hood, display: 사냥꾼 두건}
+        Armor:    {code: HunterLeather, display: 사냥꾼 가죽 갑옷}
+        Gloves:   {code: IronGauntlets, display: 철 장갑}
+        Boots:    {code: IronGreaves,   display: 철 장화}
+        Cloak:    {code: NightCloak,    display: 야행 망토}
+        Necklace: {code: SilverPendant, display: 은 목걸이}
+        Ring:     {code: SilverRing,    display: 은 반지}
+    - family: 기사단
+      en: Order
+      code: Order
+      rank: 2
+      tendency: 방어
+      pieces:
+        Helmet: {code: OrderCoif, name: Order Chain Coif, display: 기사단 사슬모}   # 「기사단 투구」는 31번(영웅) 이름
+    - {family: 폐허 수비대, en: Ruin Warden, code: RuinWarden, rank: 3, tendency: 마법}
+
+# ── 기존 영웅 · 전설 장비 — 지우지 않고 다시 매긴다(무기 직업은 weapon_class) ─────────────
+existing_high:
+  - {code: EmberSword,   display: 잉걸 장검,     grade: eUnique, rank: 1}
+  - {code: EmberStaff,   display: 잿불 지팡이,   grade: eUnique, rank: 1}
+  - {code: VenomFang,    display: 독니 단검,     grade: eUnique, rank: 1}
+  - {code: OrderHelm,    display: 기사단 투구,   grade: eUnique, rank: 1, tendency: 방어}
+  - {code: PlateArmor,   display: 판금 갑옷,     grade: eUnique, rank: 1, tendency: 방어}
+  - {code: SeverinBlade, display: 세베린의 장검, grade: eUnique, rank: 2}
+  # 세트(영웅-상 · 보스) — 서약 = 방어 · 이레린 = 마법 · 은늑대 = 균형
+  - {code: OathHelm,        display: 서약의 투구,   grade: eUnique, rank: 3, tendency: 방어}
+  - {code: OathPlate,       display: 서약의 흉갑,   grade: eUnique, rank: 3, tendency: 방어}
+  - {code: OathGauntlets,   display: 서약의 장갑,   grade: eUnique, rank: 3, tendency: 방어}
+  - {code: OathGreaves,     display: 서약의 각반,   grade: eUnique, rank: 3, tendency: 방어}
+  - {code: IrerinHood,      display: 이레린 두건,   grade: eUnique, rank: 3, tendency: 마법}
+  - {code: IrerinRobe,      display: 이레린 법복,   grade: eUnique, rank: 3, tendency: 마법}
+  - {code: IrerinAmulet,    display: 이레린 목걸이, grade: eUnique, rank: 3, tendency: 마법}
+  - {code: IrerinBand,      display: 이레린 반지,   grade: eUnique, rank: 3, tendency: 마법}
+  - {code: SilverwolfGrips, display: 은늑대 장갑,   grade: eUnique, rank: 3, tendency: 균형}
+  - {code: SilverwolfBoots, display: 은늑대 장화,   grade: eUnique, rank: 3, tendency: 균형}
+  - {code: SilverwolfCloak, display: 은늑대 망토,   grade: eUnique, rank: 3, tendency: 균형}
+  - {code: SilverwolfRing,  display: 은늑대 반지,   grade: eUnique, rank: 3, tendency: 균형}
+  - {code: Dawnkeeper,        display: 새벽지기,     grade: eLegendary, rank: 2}
+  - {code: KaldunExecutioner, display: 칼둔의 처형검, grade: eLegendary, rank: 3}
+  - {code: HarvenBranch,      display: 하르벤 가지,   grade: eLegendary, rank: 3}
+  - {code: Nightfang,         display: 밤송곳니,     grade: eLegendary, rank: 3}
+
+# ── --seed-econ: 경제 표 첫 값(ECON_SPEC §4) — 시트 파일이 생긴 뒤에는 시트가 원본 ──────────────
+seed:
+  LootConst:
+    rare_pity: 20
+    heroic_pity: 20
+    class_swap_percent: 60
+    level_gap: 10
+    elite_permille: 20
+    elite_min_tier: 2
+    elite_hp_percent: 400
+    elite_attack_percent: 150
+    elite_level_bonus: 3
+    elite_exp_percent: 300
+    elite_adena_percent: 300
+    elite_share_percent: 10
+    boss_share_percent: 3
+    shard_item: 66
+    traded_dismantle_percent: 50
+  TierLoot:                   # [tier, common_bp, uncommon_bp, rare_bp, essence_item, essence_permille, crystal_item, crystal_permille, elite_crystal_item, elite_crystal_count, elite_essence_count, elite_gear_percent]
+    - [1, 45, 42, 0,  61, 300, 0,  0, 0,  0, 5, 0]
+    - [2, 45, 30, 12, 61, 300, 64, 3, 64, 1, 5, 10]
+    - [3, 45, 30, 12, 62, 250, 64, 3, 64, 1, 5, 6]
+    - [4, 45, 30, 12, 63, 200, 65, 2, 65, 1, 5, 5]
+    - [5, 45, 30, 12, 63, 200, 65, 2, 65, 1, 5, 5]
+  EliteGear:                  # 단계: [[등급, 단, 가중치] …]
+    2: [[eRare, 3, 60], [eEpic, 1, 40]]
+    3: [[eEpic, 3, 50], [eEpic, 1, 30], [eUnique, 1, 20]]
+    4: [[eUnique, 1, 80], [eEpic, 3, 20]]
+    5: [[eUnique, 1, 80], [eEpic, 3, 20]]
+  BossLoot:                   # 보스 몬스터 id: [[아이템 id(0 = 없음), 가중치] …] — 1차 임시(2차 보스 전용 무기 · 용비늘 · 균열 계열이 오면 바꾼다)
+    29: [[51, 62], [52, 62], [53, 62], [54, 62], [0, 752]]                                   # 모로즈 — 이레린
+    30: [[47, 62], [48, 62], [49, 62], [50, 62], [0, 752]]                                   # 우르간 — 서약
+    31: [[6, 40], [47, 5], [48, 5], [49, 5], [50, 5], [51, 5], [52, 5], [53, 5], [54, 5], [55, 5], [56, 5], [57, 5], [58, 5], [0, 900]]   # 세베린
+    32: [[55, 62], [56, 62], [57, 62], [58, 62], [0, 752]]                                   # 굴개미 여왕 — 은늑대
+    33: [[47, 10], [48, 10], [49, 10], [50, 10], [51, 10], [52, 10], [53, 10], [54, 10], [55, 10], [56, 10], [57, 10], [58, 10], [0, 880]]   # 즈마이(용비늘 자리)
+    34: [[18, 30], [24, 30], [28, 30], [0, 910]]                                             # 그라목
+  Dismantle:                  # [등급, 파편, 재료 id, 재료 개수] — 모두 0 = 분해 불가
+    - [eNone, 1, 61, 2]
+    - [eRare, 3, 61, 2]
+    - [eEpic, 8, 62, 3]
+    - [eUnique, 20, 63, 4]
+    - [eLegendary, 60, 63, 4]
+    - [eMythic, 0, 0, 0]

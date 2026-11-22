@@ -1,0 +1,11 @@
+{"table": "TownSpot", "rows": [
+{"key": "behind_store", "x": 755, "y": 776},
+{"key": "fountain", "x": 749.5, "y": 762.5},
+{"key": "plaza", "x": 749, "y": 767},
+{"key": "plaza_row", "x": 753, "y": 772},
+{"key": "pvp_field", "x": 745, "y": 800},
+{"key": "quest_field", "x": 744, "y": 791},
+{"key": "south_gate", "x": 745, "y": 783},
+{"key": "south_gate_out", "x": 745, "y": 792},
+{"key": "town_center", "x": 750, "y": 752}
+]}

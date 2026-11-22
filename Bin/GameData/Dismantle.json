@@ -1,0 +1,8 @@
+{"table": "Dismantle", "rows": [
+{"grade": "eNone", "shard_count": 1, "item_id": 61, "item_count": 2},
+{"grade": "eRare", "shard_count": 3, "item_id": 61, "item_count": 2},
+{"grade": "eEpic", "shard_count": 8, "item_id": 62, "item_count": 3},
+{"grade": "eUnique", "shard_count": 20, "item_id": 63, "item_count": 4},
+{"grade": "eLegendary", "shard_count": 60, "item_id": 63, "item_count": 4},
+{"grade": "eMythic", "shard_count": 0, "item_id": 0, "item_count": 0}
+]}

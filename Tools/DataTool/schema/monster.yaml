@@ -1,0 +1,35 @@
+# 스키마 — 몬스터 묶음. 열 순서 = 정본 JSON 순서(Canon_Monster.h와 같아야 한다 — datatool check가 골든 _schema.json과 대조).
+# 열 속성: key · type(정본 형) · desc(시트 2행) · ref(참조 탭) · ref_zero(0 = 없음 허용) · max_bytes(UTF-8 바이트 상한) · min · max · default(빈 칸 허용 값)
+bundle: monster
+tabs:
+  Monster:
+    source: sheet
+    desc: "몬스터 종족. id는 몬스터 ObjID의 KIND로 패킷에 실린다 — 영구(바꾸거나 다시 쓰지 않는다, 새 종족은 끝에)."
+    key: [id]
+    id_lock: true
+    code_names: {header: MonsterIds.h, ns: "MonsterTable::Id", type: uint16_t}
+    columns:
+      - {key: id, type: u16, desc: "종족 id — 1부터 연속, 영구", min: 1}
+      - {key: code_name, type: "str?", desc: "코드가 부르는 이름(MonsterTable::Id::이것) — 보스 등만, 영문 대문자 시작", pattern: "^[A-Z][A-Za-z0-9]*$", default: null}
+      - {key: name, type: str, desc: "이름(UTF-8 19바이트 이하 — 패킷 name[20])", max_bytes: 19, nonempty: true}
+      - {key: epithet, type: "str?", desc: "보스 별칭(이름표 · 체력 막대 · 등장 알림, 클라 표시)", default: null}
+      - {key: aggressive, type: bool, desc: "선공(시야에 들어오면 공격). 아니면 맞을 때 반격", default: false}
+      - {key: level, type: u8, desc: "레벨", min: 1}
+      - {key: max_hp, type: u16, desc: "최대 HP(0 불가)", min: 1}
+      - {key: attack, type: u16, desc: "공격력(0 불가)", min: 1}
+      - {key: exp, type: u32, desc: "처치 경험치"}
+      - {key: adena_min, type: u32, desc: "그로시 최소(필드 아이템 수량 — 65535 이하)", max: 65535}
+      - {key: adena_max, type: u32, desc: "그로시 최대(≥ 최소, 65535 이하)", max: 65535}
+      - {key: adena_chance, type: u8, desc: "그로시를 떨어뜨릴 확률(%)", max: 100}
+      - {key: drop_table, type: u8, desc: "드롭 표 번호(DropTable.id, 0 = 없음)", ref: DropTable, ref_zero: true}
+      - {key: drop_rolls, type: u8, desc: "처치 한 번에 드롭을 굴리는 횟수(보스는 여러 번)", min: 1}
+      - {key: attack_interval_ms, type: u16, desc: "공격 간격(ms)", min: 100}
+      - {key: move_interval_ms, type: u16, desc: "한 칸 이동 간격(ms)", min: 100}
+      - {key: leash, type: u8, desc: "스폰 지점에서 이 칸 수를 넘으면 추격 포기"}
+      - {key: boss, type: bool, desc: "필드 보스", default: false}
+      - {key: archetype, type: "enum:MonsterArchetype", desc: "그리는 모양(클라 표시 전용)"}
+      - {key: variant, type: "enum:MonsterVariant", desc: "모양 변형(클라 표시 전용)"}
+      - {key: color1, type: color, desc: "주 색(클라)"}
+      - {key: color2, type: color, desc: "보조 색(클라)"}
+      - {key: scale, type: u16, desc: "크기(100 = 1.0배, 클라)"}
+      - {key: dummy, type: bool, desc: "훈련장 허수아비 — 움직이지 · 때리지 · 죽지 않고 경험치 · 전리품 없음", default: false}

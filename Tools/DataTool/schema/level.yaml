@@ -1,0 +1,54 @@
+# 스키마 — 레벨 묶음(Level · Class). 열 순서 = 정본 JSON 순서(Canon_Level.h).
+bundle: level
+tabs:
+  Level:
+    source: sheet
+    desc: "레벨별 수치(1~50). 예전 공식(LevelTable 함수)을 행으로 풀었다 — 함수는 이 표를 읽는다. 행 수 = LevelTable::kMaxLevel(구조 상수)."
+    key: [level]
+    rows_exact: 50
+    columns:
+      - {key: level, type: u8, desc: "레벨(1부터 연속)", min: 1, max: 50}
+      - {key: exp_to_next, type: u32, desc: "다음 레벨까지 경험치(만렙 50은 0)"}
+      - {key: max_hp, type: u16, desc: "최대 HP"}
+      - {key: base_attack, type: u16, desc: "기본 공격력"}
+      - {key: regen, type: u16, desc: "5초마다 HP 회복(필드)"}
+      - {key: regen_safe, type: u16, desc: "5초마다 HP 회복(마을 안전지대)"}
+      - {key: death_penalty, type: u32, desc: "몬스터에게 죽을 때 잃는 경험치(지금 경험치보다 많이 잃지 않는다)"}
+  Class:
+    source: sheet
+    desc: "직업(3). id = ClassId 열거형 — 행 순서 = id."
+    key: [id]
+    rows_exact: 3
+    columns:
+      - {key: id, type: "enum:ClassId", desc: "직업"}
+      - {key: name, type: str, desc: "이름", nonempty: true}
+      - {key: role, type: str, desc: "역할 한 줄"}
+      - {key: desc, type: str, desc: "설명"}
+      - {key: base_str, type: i16, desc: "1레벨 힘"}
+      - {key: base_dex, type: i16, desc: "1레벨 민첩"}
+      - {key: base_int, type: i16, desc: "1레벨 지능"}
+      - {key: base_vit, type: i16, desc: "1레벨 체력"}
+      - {key: base_wis, type: i16, desc: "1레벨 지혜"}
+      - {key: base_luk, type: i16, desc: "1레벨 행운"}
+      - {key: growth10_str, type: u8, desc: "레벨당 힘 성장 ×10(15 = 1.5)"}
+      - {key: growth10_dex, type: u8, desc: "레벨당 민첩 성장 ×10"}
+      - {key: growth10_int, type: u8, desc: "레벨당 지능 성장 ×10"}
+      - {key: growth10_vit, type: u8, desc: "레벨당 체력 성장 ×10"}
+      - {key: growth10_wis, type: u8, desc: "레벨당 지혜 성장 ×10"}
+      - {key: growth10_luk, type: u8, desc: "레벨당 행운 성장 ×10"}
+      - {key: base_hp, type: u16, desc: "1레벨 HP"}
+      - {key: hp_per_level, type: u16, desc: "레벨당 HP"}
+      - {key: base_mp, type: u16, desc: "1레벨 MP"}
+      - {key: mp_per_level, type: u16, desc: "레벨당 MP"}
+      - {key: atk_str10, type: u8, desc: "공격력 = 무기 + 힘 × 이것/10 + …"}
+      - {key: atk_dex10, type: u8, desc: "… + 민첩 × 이것/10"}
+      - {key: basic_interval_ms, type: u16, desc: "기본 공격 간격(ms, 공격속도 100%)"}
+      - {key: basic_range, type: u8, desc: "기본 공격 사거리(칸)"}
+      - {key: skill_0, type: u16, desc: "기본 공격 기술", ref: Skill}
+      - {key: skill_1, type: u16, desc: "기술 칸 1", ref: Skill}
+      - {key: skill_2, type: u16, desc: "기술 칸 2", ref: Skill}
+      - {key: skill_3, type: u16, desc: "기술 칸 3", ref: Skill}
+      - {key: skill_4, type: u16, desc: "기술 칸 4", ref: Skill}
+      - {key: skill_5, type: u16, desc: "기술 칸 5", ref: Skill}
+      - {key: starter_weapon, type: u16, desc: "초보자 무기", ref: Item}
+      - {key: color, type: color, desc: "직업 색(클라)"}

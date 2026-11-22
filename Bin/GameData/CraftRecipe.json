@@ -1,0 +1,23 @@
+{"table": "CraftRecipe", "rows": [
+{"id": 1, "grade": "eNone", "rank": 2, "part": "eWeapon", "fee": 100, "in1_item": 61, "in1_count": 15, "in2_item": 66, "in2_count": 2, "in3_item": 0, "in3_count": 0, "in4_item": 0, "in4_count": 0},
+{"id": 2, "grade": "eNone", "rank": 2, "part": "eArmor", "fee": 50, "in1_item": 61, "in1_count": 8, "in2_item": 66, "in2_count": 1, "in3_item": 0, "in3_count": 0, "in4_item": 0, "in4_count": 0},
+{"id": 3, "grade": "eNone", "rank": 2, "part": "eAccessory", "fee": 50, "in1_item": 61, "in1_count": 8, "in2_item": 66, "in2_count": 1, "in3_item": 0, "in3_count": 0, "in4_item": 0, "in4_count": 0},
+{"id": 4, "grade": "eNone", "rank": 3, "part": "eWeapon", "fee": 300, "in1_item": 61, "in1_count": 40, "in2_item": 66, "in2_count": 3, "in3_item": 0, "in3_count": 0, "in4_item": 0, "in4_count": 0},
+{"id": 5, "grade": "eNone", "rank": 3, "part": "eArmor", "fee": 150, "in1_item": 61, "in1_count": 20, "in2_item": 66, "in2_count": 2, "in3_item": 0, "in3_count": 0, "in4_item": 0, "in4_count": 0},
+{"id": 6, "grade": "eNone", "rank": 3, "part": "eAccessory", "fee": 150, "in1_item": 61, "in1_count": 20, "in2_item": 66, "in2_count": 2, "in3_item": 0, "in3_count": 0, "in4_item": 0, "in4_count": 0},
+{"id": 7, "grade": "eRare", "rank": 1, "part": "eWeapon", "fee": 500, "in1_item": 61, "in1_count": 60, "in2_item": 66, "in2_count": 8, "in3_item": 0, "in3_count": 0, "in4_item": 0, "in4_count": 0},
+{"id": 8, "grade": "eRare", "rank": 1, "part": "eArmor", "fee": 250, "in1_item": 61, "in1_count": 30, "in2_item": 66, "in2_count": 4, "in3_item": 0, "in3_count": 0, "in4_item": 0, "in4_count": 0},
+{"id": 9, "grade": "eRare", "rank": 1, "part": "eAccessory", "fee": 250, "in1_item": 61, "in1_count": 30, "in2_item": 66, "in2_count": 4, "in3_item": 0, "in3_count": 0, "in4_item": 0, "in4_count": 0},
+{"id": 10, "grade": "eRare", "rank": 2, "part": "eWeapon", "fee": 1200, "in1_item": 61, "in1_count": 150, "in2_item": 64, "in2_count": 5, "in3_item": 66, "in3_count": 15, "in4_item": 0, "in4_count": 0},
+{"id": 11, "grade": "eRare", "rank": 2, "part": "eArmor", "fee": 600, "in1_item": 61, "in1_count": 75, "in2_item": 64, "in2_count": 3, "in3_item": 66, "in3_count": 8, "in4_item": 0, "in4_count": 0},
+{"id": 12, "grade": "eRare", "rank": 2, "part": "eAccessory", "fee": 600, "in1_item": 61, "in1_count": 75, "in2_item": 64, "in2_count": 3, "in3_item": 66, "in3_count": 8, "in4_item": 0, "in4_count": 0},
+{"id": 13, "grade": "eEpic", "rank": 1, "part": "eWeapon", "fee": 2000, "in1_item": 62, "in1_count": 80, "in2_item": 64, "in2_count": 10, "in3_item": 66, "in3_count": 30, "in4_item": 0, "in4_count": 0},
+{"id": 14, "grade": "eEpic", "rank": 1, "part": "eArmor", "fee": 1000, "in1_item": 62, "in1_count": 40, "in2_item": 64, "in2_count": 5, "in3_item": 66, "in3_count": 15, "in4_item": 0, "in4_count": 0},
+{"id": 15, "grade": "eEpic", "rank": 1, "part": "eAccessory", "fee": 1000, "in1_item": 62, "in1_count": 40, "in2_item": 64, "in2_count": 11, "in3_item": 66, "in3_count": 15, "in4_item": 0, "in4_count": 0},
+{"id": 16, "grade": "eEpic", "rank": 2, "part": "eWeapon", "fee": 5000, "in1_item": 62, "in1_count": 200, "in2_item": 64, "in2_count": 30, "in3_item": 66, "in3_count": 60, "in4_item": 0, "in4_count": 0},
+{"id": 17, "grade": "eEpic", "rank": 2, "part": "eArmor", "fee": 2500, "in1_item": 62, "in1_count": 100, "in2_item": 64, "in2_count": 15, "in3_item": 66, "in3_count": 30, "in4_item": 0, "in4_count": 0},
+{"id": 18, "grade": "eEpic", "rank": 2, "part": "eAccessory", "fee": 2500, "in1_item": 62, "in1_count": 100, "in2_item": 64, "in2_count": 21, "in3_item": 66, "in3_count": 30, "in4_item": 0, "in4_count": 0},
+{"id": 19, "grade": "eUnique", "rank": 1, "part": "eWeapon", "fee": 8000, "in1_item": 63, "in1_count": 150, "in2_item": 65, "in2_count": 20, "in3_item": 66, "in3_count": 80, "in4_item": 0, "in4_count": 0},
+{"id": 20, "grade": "eUnique", "rank": 1, "part": "eArmor", "fee": 4000, "in1_item": 63, "in1_count": 75, "in2_item": 65, "in2_count": 10, "in3_item": 66, "in3_count": 40, "in4_item": 0, "in4_count": 0},
+{"id": 21, "grade": "eUnique", "rank": 1, "part": "eAccessory", "fee": 4000, "in1_item": 63, "in1_count": 75, "in2_item": 65, "in2_count": 16, "in3_item": 66, "in3_count": 40, "in4_item": 0, "in4_count": 0}
+]}

@@ -1,0 +1,33 @@
+name: Server checks
+on:
+  push:
+    paths:
+      - 'Server/**'
+      - 'Libs/**'
+      - 'Shared/**'
+      - 'Tools/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+      - '.github/workflows/**'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  memory-db-and-rules:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y g++ cmake ninja-build libboost-dev unixodbc-dev
+      - name: Configure memory DB
+        run: cmake --preset linux-memory
+      - name: Build server and regression targets
+        run: cmake --build --preset linux-memory --parallel 2 --target GameServer StressTest ConcurrencyTests BehaviorTreeTests PartyRuleTests LootRuleTests GuildRuleTests AchieveRuleTests ServicePostTests SocialStoreTests
+      - name: Run rule and concurrency tests
+        shell: bash
+        run: |
+          for test in ConcurrencyTests BehaviorTreeTests PartyRuleTests LootRuleTests GuildRuleTests AchieveRuleTests ServicePostTests SocialStoreTests; do
+            ./build/linux-memory/Server/HARVEN_GameServer/tests/$test
+          done

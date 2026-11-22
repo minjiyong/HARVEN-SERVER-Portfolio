@@ -1,0 +1,93 @@
+# 스키마 — 경제 묶음(경제 1차: 필드 · 정예 · 보스 장비 굴림 · 제작 · 분해). 열 순서 = Canon_Econ.h.
+# 아이템 묶음 다음에 읽는다(Item · Monster를 가리킨다). 설계: Shared/Document/ECONOMY.md · 규칙 R124~R135(DATA_RULES.md).
+# 구조 상수(등급 수 6 · 단 1~3 · 지역 단계 1~5 · 제작 재료 4칸)는 코드(EconRules.h)에 남는다.
+bundle: econ
+tabs:
+  LootConst:
+    source: sheet
+    desc: "장비 굴림 · 정예 · 분해 상수(한 행)."
+    key: []
+    rows_exact: 1
+    columns:
+      - {key: rare_pity, type: u16, desc: "희귀 천장 — 필드 장비 N개 동안 희귀가 없으면 다음 장비는 희귀(그 단계 rare_bp > 0일 때)", min: 1}
+      - {key: heroic_pity, type: u16, desc: "영웅 천장 — 정예 · 보스 장비 N개 동안 영웅이 없으면 다음은 영웅(그 표에 영웅 칸이 있을 때)", min: 1}
+      - {key: class_swap_percent, type: u8, desc: "남의 직업 무기가 뽑히면 같은 등급 · 단 · 경로의 자기 직업 무기로 바꿀 확률(%)", max: 100}
+      - {key: level_gap, type: u8, desc: "몬스터가 받는 사람보다 N레벨 이상 낮으면 정수 · 결정 확률 절반"}
+      - {key: elite_permille, type: u16, desc: "스폰 · 재등장마다 정예가 될 확률(‰)", max: 1000}
+      - {key: elite_min_tier, type: u8, desc: "이 단계 이상 지역(Region.tier)에서만 정예", min: 1, max: 5}
+      - {key: elite_hp_percent, type: u16, desc: "정예 최대 HP(%)", min: 100}
+      - {key: elite_attack_percent, type: u16, desc: "정예 공격력(%)", min: 100}
+      - {key: elite_level_bonus, type: u8, desc: "정예 방어 · 회피 · 경직 계산 레벨 가산"}
+      - {key: elite_exp_percent, type: u16, desc: "정예 경험치(%)"}
+      - {key: elite_adena_percent, type: u16, desc: "정예 그로시(%)"}
+      - {key: elite_share_percent, type: u8, desc: "정예 보상 자격 — 전체 피해의 N% 이상 + 공유 범위 안", max: 100}
+      - {key: boss_share_percent, type: u8, desc: "보스 개인 굴림 자격 — 피해 N% 이상(또는 그런 사람의 파티원 · 공유 범위 안)", max: 100}
+      - {key: shard_item, type: u16, desc: "장비 파편 아이템(재료)", ref: Item}
+      - {key: traded_dismantle_percent, type: u8, desc: "거래 이력(인스턴스 bit 9) 장비의 분해량(%) — 올림", max: 100}
+  TierLoot:
+    source: sheet
+    desc: "지역 단계(Region.tier 1~5)별 필드 장비 · 정수 · 결정 · 정예 보상. 행 = 단계 1~5."
+    key: [tier]
+    rows_exact: 5
+    columns:
+      - {key: tier, type: u8, desc: "지역 단계(1~5 — 죽은 자리 Region.tier)", min: 1, max: 5}
+      - {key: common_bp, type: u16, desc: "일반 몬스터 처치당 일반 장비 확률(만분율 — 아이템 찾기로 오른다)", max: 10000}
+      - {key: uncommon_bp, type: u16, desc: "고급 장비(만분율)", max: 10000}
+      - {key: rare_bp, type: u16, desc: "희귀 장비(만분율)", max: 10000}
+      - {key: essence_item, type: u16, desc: "사냥 정수(재료)", ref: Item}
+      - {key: essence_permille, type: u16, desc: "처치당 정수 확률(‰ — 피해 비례 추첨 1명)", max: 1000}
+      - {key: crystal_item, type: u16, desc: "일반 몬스터 결정(재료, 0 = 없음)", ref: Item, ref_zero: true}
+      - {key: crystal_permille, type: u16, desc: "처치당 결정 확률(‰)", max: 1000}
+      - {key: elite_crystal_item, type: u16, desc: "정예 결정(재료, 0 = 없음)", ref: Item, ref_zero: true}
+      - {key: elite_crystal_count, type: u8, desc: "정예 결정 개수(자격자마다)"}
+      - {key: elite_essence_count, type: u8, desc: "정예 정수 개수(자격자마다 — 이 단계 essence_item)"}
+      - {key: elite_gear_percent, type: u8, desc: "정예 장비 확률(자격자마다, %) — EliteGear로 등급 · 단", max: 100}
+  EliteGear:
+    source: sheet
+    desc: "정예 장비의 등급 · 단 가중치(단계마다). 고른 (등급, 단)의 route에 Elite가 있는 장비 중에서 고른다. seq는 단계마다 1부터 연속."
+    key: [tier, seq]
+    child_of: {tab: TierLoot, key: tier}
+    columns:
+      - {key: tier, type: u8, desc: "지역 단계", ref: TierLoot}
+      - {key: seq, type: u8, desc: "순서(1부터)", min: 1}
+      - {key: grade, type: "enum:ItemGrade", desc: "등급"}
+      - {key: rank, type: u8, desc: "단(1 하 · 2 중 · 3 상)", min: 1, max: 3}
+      - {key: weight, type: u16, desc: "가중치"}
+  BossLoot:
+    source: sheet
+    desc: "보스 개인 굴림(자격자마다 한 번). item_id 0 = 없음. 무기 행은 그 사람 직업이 못 쓰면 빼고 가중치를 다시 합한다. seq는 보스마다 1부터 연속."
+    key: [species, seq]
+    child_of: {tab: Monster, key: species}
+    columns:
+      - {key: species, type: u16, desc: "보스 몬스터", ref: Monster}
+      - {key: seq, type: u8, desc: "순서(1부터)", min: 1}
+      - {key: item_id, type: u16, desc: "장비(0 = 없음)", ref: Item, ref_zero: true}
+      - {key: weight, type: u16, desc: "가중치"}
+  CraftRecipe:
+    source: sheet
+    desc: "대장장이 제작 — 등급 × 단 × 부위 묶음마다 재료 · 수수료. 제작 가능 = 그 장비의 route에 Craft. 재료 빈 칸은 0."
+    key: [id]
+    columns:
+      - {key: id, type: u16, desc: "레시피 번호", min: 1}
+      - {key: grade, type: "enum:ItemGrade", desc: "만들 장비의 등급"}
+      - {key: rank, type: u8, desc: "단(1 하 · 2 중 · 3 상)", min: 1, max: 3}
+      - {key: part, type: "enum:CraftPart", desc: "부위 묶음(eWeapon 무기 · eArmor 투구~망토 · eAccessory 목걸이 · 반지)"}
+      - {key: fee, type: u32, desc: "수수료(그로시)"}
+      - {key: in1_item, type: u16, desc: "재료 1(재료 아이템, 0 = 없음)", ref: Item, ref_zero: true}
+      - {key: in1_count, type: u16, desc: "재료 1 개수"}
+      - {key: in2_item, type: u16, desc: "재료 2", ref: Item, ref_zero: true}
+      - {key: in2_count, type: u16, desc: "재료 2 개수"}
+      - {key: in3_item, type: u16, desc: "재료 3", ref: Item, ref_zero: true}
+      - {key: in3_count, type: u16, desc: "재료 3 개수"}
+      - {key: in4_item, type: u16, desc: "재료 4", ref: Item, ref_zero: true}
+      - {key: in4_count, type: u16, desc: "재료 4 개수"}
+  Dismantle:
+    source: sheet
+    desc: "분해 — 장비 등급마다 한 행(행 수 = 등급 수, 행 순서 = 등급). 거래 이력 장비는 둘 다 traded_dismantle_percent(올림). 모두 0 = 분해 불가."
+    key: [grade]
+    rows_exact: 6
+    columns:
+      - {key: grade, type: "enum:ItemGrade", desc: "장비 등급"}
+      - {key: shard_count, type: u16, desc: "장비 파편 개수(LootConst.shard_item)"}
+      - {key: item_id, type: u16, desc: "함께 주는 재료(0 = 없음)", ref: Item, ref_zero: true}
+      - {key: item_count, type: u16, desc: "재료 개수"}

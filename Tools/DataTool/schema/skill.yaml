@@ -1,0 +1,113 @@
+# 스키마 — 스킬 묶음(Skill · SkillAction · SkillHit · Status · Combo · SkillKeyMap). 열 순서 = Canon_Skill.h.
+bundle: skill
+tabs:
+  Skill:
+    source: sheet
+    desc: "기술 기본 표(판정 · 표시). id 0은 빈 행(원본 그대로). id는 저장되는 값 — 영구. Skill과 SkillAction은 id가 1:1."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u16, desc: "기술 id — 0부터 연속(행 순서 = id), 영구"}
+      - {key: cls, type: "enum:ClassId", desc: "직업"}
+      - {key: slot, type: u8, desc: "칸(0 = 기본 공격, 1~5 = 예전 슬롯, 6 = 확장 경로 전용 — 예전 슬롯 밖)", max: 6}
+      - {key: name, type: str, desc: "이름"}
+      - {key: desc, type: str, desc: "설명(툴팁)"}
+      - {key: combo, type: str, desc: "연계 설명(툴팁)"}
+      - {key: unlock_level, type: u8, desc: "배우는 레벨"}
+      - {key: mp, type: u16, desc: "MP 소모"}
+      - {key: cooldown_ms, type: u16, desc: "재사용 대기(ms)"}
+      - {key: cast_ms, type: u16, desc: "시전(예고) 시간 — 서버가 이만큼 뒤에 판정"}
+      - {key: range, type: u8, desc: "사거리(칸, 체비셰프)"}
+      - {key: target, type: "enum:SkillTarget", desc: "대상 방식"}
+      - {key: shape, type: "enum:SkillShape", desc: "범위 모양"}
+      - {key: radius, type: u8, desc: "범위(칸)"}
+      - {key: kind, type: "enum:DamageKind", desc: "피해 종류"}
+      - {key: coeff, type: u16, desc: "피해 = 공격력 × %"}
+      - {key: hits, type: u8, desc: "타수"}
+      - {key: status, type: "enum:StatusId", desc: "적중 시 거는 상태"}
+      - {key: status_ms, type: u16, desc: "상태 시간(ms)"}
+      - {key: status_stacks, type: u8, desc: "상태 중첩"}
+      - {key: combo_status, type: "enum:StatusId", desc: "대상이 이 상태면 연계"}
+      - {key: combo_bonus, type: u16, desc: "연계 피해 +%"}
+      - {key: combo_id, type: u8, desc: "연계 이름(Combo.id, 0 = 없음)", ref: Combo}
+      - {key: consume_combo, type: bool, desc: "연계 뒤 상태 제거", default: false}
+      - {key: knockback, type: u8, desc: "넉백(칸)"}
+      - {key: dash, type: u8, desc: "이동(칸) — 돌진 · 도약 · 회피"}
+      - {key: projectile, type: u16, desc: "투사체 속도(칸/초 ×10, 표시) 0 = 즉발"}
+      - {key: color, type: color, desc: "표시 색"}
+  SkillAction:
+    source: sheet
+    desc: "기술 확장 경로(키 · 유형 · 동작 시간). 타격은 SkillHit. id = Skill.id(같은 행 수 · 같은 순서)."
+    key: [id]
+    columns:
+      - {key: id, type: u16, desc: "기술 id(Skill.id)", ref: Skill, ref_zero: true}
+      - {key: key, type: "enum:SkillKey", desc: "기본 칸"}
+      - {key: kind, type: "enum:SkillKind", desc: "유형(기본 · 차지 · 홀딩 …)"}
+      - {key: tier, type: u8, desc: "연출 등급 T1~T4", max: 4}
+      - {key: special, type: "enum:SkillSpecial", desc: "특수 처리"}
+      - {key: cooldown_ms, type: u32, desc: "재사용 대기(0 = Skill.cooldown_ms)"}
+      - {key: cast_ms, type: u16, desc: "첫 타 기준 예고(ms)"}
+      - {key: lock_ms, type: u16, desc: "동작 잠금(후딜, ms)"}
+      - {key: super_armor_ms, type: u16, desc: "경직 면역(ms)"}
+      - {key: invuln_ms, type: u16, desc: "무적(ms)"}
+      - {key: stages, type: u8, desc: "콤보 타수 · 차지 단계 · 체인 단수"}
+      - {key: stage_ms, type: u16, desc: "단계 시간 · 다음 입력 창(ms)"}
+      - {key: perfect_ms, type: u16, desc: "차지 완벽 구간(ms)"}
+      - {key: hold_max_ms, type: u16, desc: "홀딩 · 토글 최대(ms)"}
+      - {key: tick_ms, type: u16, desc: "홀딩 · 토글 틱(ms)"}
+      - {key: tick_mp, type: u8, desc: "토글 틱마다 MP"}
+      - {key: move_while_casting, type: bool, desc: "시전 중 이동 가능", default: false}
+      - {key: range, type: u8, desc: "사거리(0 = Skill.range)"}
+      - {key: move_ms, type: u8, desc: "기술 이동 칸당 ms(0 = 순간이동)"}
+      - {key: kind_text, type: str, desc: "툴팁 한 줄(유형 · 판정)"}
+  SkillHit:
+    source: sheet
+    desc: "기술 타격(기술마다 최대 8 — 구조 상수). seq는 1부터 연속."
+    key: [skill_id, seq]
+    child_of: {tab: SkillAction, key: skill_id, max: 8}
+    columns:
+      - {key: skill_id, type: u16, desc: "기술 id", ref: SkillAction}
+      - {key: seq, type: u8, desc: "타격 순서(1부터)", min: 1, max: 8}
+      - {key: at_ms, type: u16, desc: "타격 시각(ms, 시전 기준)"}
+      - {key: coeff, type: u16, desc: "피해 = 공격력 × %"}
+      - {key: shape, type: "enum:HitShape", desc: "모양"}
+      - {key: anchor, type: "enum:HitAnchor", desc: "기준점"}
+      - {key: a, type: u8, desc: "반경 · 길이(칸)"}
+      - {key: b, type: u8, desc: "부채꼴 반각(°) · 직선 폭 · 고리 안쪽 반경"}
+      - {key: along, type: i8, desc: "중심을 조준 방향으로 이만큼(칸)"}
+      - {key: react, type: "enum:HitReact", desc: "피격 반응"}
+      - {key: stagger, type: u8, desc: "무력화 수치"}
+      - {key: flags, type: "flags:HitFlag", desc: "플래그(이름을 | 로 — 예: HF_Status|HF_Heavy)", default: ""}
+      - {key: stage, type: u8, desc: "콤보 몇 타 · 최소 차지 단계 · 체인 단(0 = 언제나)"}
+      - {key: max_targets, type: u8, desc: "최대 대상(0 = 무제한)"}
+  Status:
+    source: sheet
+    desc: "상태이상. id = StatusId 열거형 — 행 수 = StatusId::Count, 행 순서 = id."
+    key: [id]
+    columns:
+      - {key: id, type: "enum:StatusId", desc: "상태"}
+      - {key: name, type: str, desc: "이름"}
+      - {key: debuff, type: bool, desc: "해로운 상태", default: false}
+      - {key: blocks_move, type: bool, desc: "이동 불가", default: false}
+      - {key: blocks_attack, type: bool, desc: "공격 불가", default: false}
+      - {key: max_stacks, type: u8, desc: "최대 중첩"}
+      - {key: tick_ms, type: u16, desc: "지속 피해 간격(0 = 없음)"}
+      - {key: tick_percent, type: u16, desc: "틱 피해 = 거는 사람 공격력 × %(중첩마다)"}
+      - {key: slow_percent, type: u16, desc: "이동속도 감소 %"}
+      - {key: color, type: color, desc: "표시 색"}
+  Combo:
+    source: sheet
+    desc: "연계 이름(클라 표시). id 0 = 빈 이름."
+    key: [id]
+    columns:
+      - {key: id, type: u8, desc: "연계 id(0부터 연속)"}
+      - {key: name, type: str, desc: "이름"}
+  SkillKeyMap:
+    source: sheet
+    desc: "직업 × 칸 → 기본 기술(칸은 클라 설정으로 바꿀 수 있다). 3 × 12행."
+    key: [cls, key]
+    rows_exact: 36
+    columns:
+      - {key: cls, type: "enum:ClassId", desc: "직업"}
+      - {key: key, type: "enum:SkillKey", desc: "칸"}
+      - {key: skill_id, type: u16, desc: "기술 id", ref: SkillAction}

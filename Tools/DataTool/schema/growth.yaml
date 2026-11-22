@@ -1,0 +1,35 @@
+# 스키마 — 기술성장 묶음(GrowthTree · GrowthVariant · GrowthConst). 열 순서 = Canon_Growth.h.
+# kMaxLevel(10) · kIdSpan(40) · kSlots(8)는 구조 상수(상태 1바이트 포장 · 배열 크기) — 코드에 남는다.
+bundle: growth
+tabs:
+  GrowthTree:
+    source: sheet
+    desc: "기술마다 갈래 넷 — 레벨 4(갈래 Ⅰ: a1 · a2 중 하나) · 레벨 7(갈래 Ⅱ: b1 · b2 중 하나). 값은 GrowthVariant id."
+    key: [skill_id]
+    columns:
+      - {key: skill_id, type: u16, desc: "기술 id(< 40)", ref: SkillAction, max: 39}
+      - {key: a1, type: u16, desc: "갈래 Ⅰ 첫째", ref: GrowthVariant}
+      - {key: a2, type: u16, desc: "갈래 Ⅰ 둘째", ref: GrowthVariant}
+      - {key: b1, type: u16, desc: "갈래 Ⅱ 첫째", ref: GrowthVariant}
+      - {key: b2, type: u16, desc: "갈래 Ⅱ 둘째", ref: GrowthVariant}
+  GrowthVariant:
+    source: sheet
+    desc: "갈래(공용 프리셋 + 고유 갈래). 여러 기술이 같은 행을 가리킬 수 있다 — 고치면 모두 바뀐다."
+    key: [id]
+    columns:
+      - {key: id, type: u16, desc: "갈래 id(1부터)", min: 1}
+      - {key: mod, type: "enum:GrowthMod", desc: "효과 종류"}
+      - {key: value, type: u8, desc: "효과 값(종류마다 뜻이 다르다)"}
+      - {key: status, type: "enum:StatusId", desc: "상태이상(Element · Lasting)"}
+      - {key: color, type: color, desc: "연출 색(#000000 = 기술 색)"}
+      - {key: name, type: str, desc: "이름", nonempty: true}
+      - {key: desc, type: str, desc: "설명", nonempty: true}
+  GrowthConst:
+    source: sheet
+    desc: "기술 성장 상수(한 행)."
+    key: []
+    rows_exact: 1
+    columns:
+      - {key: tier_level_1, type: u8, desc: "갈래 Ⅰ이 열리는 기술 레벨", min: 1, max: 10}
+      - {key: tier_level_2, type: u8, desc: "갈래 Ⅱ가 열리는 기술 레벨", min: 1, max: 10}
+      - {key: damage_per_level, type: u32, desc: "기술 레벨마다 피해 +%"}

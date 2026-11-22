@@ -1,0 +1,5 @@
+{"table": "GuildAttend", "rows": [
+{"tier": 1, "members": 3, "seals": 10, "exp": 150, "contrib": 5},
+{"tier": 2, "members": 6, "seals": 20, "exp": 300, "contrib": 5},
+{"tier": 3, "members": 10, "seals": 40, "exp": 600, "contrib": 10}
+]}

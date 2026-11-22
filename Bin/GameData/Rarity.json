@@ -1,0 +1,8 @@
+{"table": "Rarity", "rows": [
+{"id": "Common", "name": "일반", "color": "#CFC9BC", "option_count": 0, "sell_percent": 100, "loot_notice": false},
+{"id": "Uncommon", "name": "고급", "color": "#8CC46E", "option_count": 1, "sell_percent": 130, "loot_notice": false},
+{"id": "Rare", "name": "희귀", "color": "#5F9FE0", "option_count": 2, "sell_percent": 170, "loot_notice": true},
+{"id": "Heroic", "name": "영웅", "color": "#A985D8", "option_count": 3, "sell_percent": 260, "loot_notice": true},
+{"id": "Legendary", "name": "전설", "color": "#E4A04E", "option_count": 3, "sell_percent": 420, "loot_notice": true},
+{"id": "Mythic", "name": "신화", "color": "#E0604E", "option_count": 4, "sell_percent": 700, "loot_notice": true}
+]}

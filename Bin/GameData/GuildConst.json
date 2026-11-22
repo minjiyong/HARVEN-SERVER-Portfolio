@@ -1,0 +1,3 @@
+{"table": "GuildConst", "rows": [
+{"week_period_sec": 604800, "week_offset_sec": 334800, "day_period_sec": 86400, "day_offset_sec": 75600, "kill_exp_pct": 20, "member_daily_exp_cap": 1500, "kill_contrib": 1, "boss_contrib": 30, "coop_new_days": 7, "coop_contrib_bonus": 2, "attend_active_min": 20, "mission_slots": 3, "mission_bonus_members": 5, "mission_bonus_pct": 30, "leader_absent_sec": 1209600, "claim_grace_sec": 259200, "post_max": 60, "log_keep": 200, "apply_expire_sec": 86400, "apply_max": 8, "perm_officer": "Invite|Approve|Kick|Notice|Board|Rank|Shop", "perm_elite": "Invite|Shop", "perm_member": "Shop"}
+]}

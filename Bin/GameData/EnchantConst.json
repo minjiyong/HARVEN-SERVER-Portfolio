@@ -1,0 +1,3 @@
+{"table": "EnchantConst", "rows": [
+{"world_notice_level": 10, "first_notice_level": 11, "gain_per_further_level": 25, "accessory_hp_per_point": 5, "accessory_mp_per_point": 3}
+]}

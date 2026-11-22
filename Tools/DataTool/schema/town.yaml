@@ -1,0 +1,118 @@
+# 스키마 — 마을 묶음. 열 순서 = Canon_Town.h.
+# 주인이 둘이다(SHEET_DATA_PROMPT [3] — 원본이 둘이 되면 안 된다):
+#   source: sheet  — 사람이 글로 다루는 것(Town 이름 · District · Ambient). 시트 HARVEN_DATA가 원본.
+#   source: mapgen — 격자 · 배치. HARVEN-DESIGN tools/mapgen이 원본이고 GameData/에 직접 쓴다(datatool export는 건드리지 않는다).
+# 좌표는 모두 월드 칸.
+bundle: town
+tabs:
+  Town:
+    source: sheet
+    desc: "마을 머리(한 행). zone_id는 mapgen TownInfo와 같아야 한다."
+    key: []
+    rows_exact: 1
+    columns:
+      - {key: zone_id, type: u16, desc: "마을 Zone(TownInfo.zone_id와 같게)"}
+      - {key: name, type: str, desc: "마을 이름", nonempty: true}
+  District:
+    source: sheet
+    desc: "구획 — 투어(--script tour) 자리 · 지도 이름. 순서 = 투어 순서."
+    key: [seq]
+    columns:
+      - {key: seq, type: u8, desc: "순서(1부터)", min: 1}
+      - {key: name, type: str, desc: "구획 이름", nonempty: true}
+      - {key: sub, type: str, desc: "한 줄 설명(투어 자막)"}
+      - {key: x, type: f32, desc: "투어 · 지도 이름 자리 x(월드 칸, 소수 가능)"}
+      - {key: y, type: f32, desc: "자리 y"}
+      - {key: zoom, type: f32, desc: "투어 줌"}
+  Ambient:
+    source: sheet
+    desc: "소리 구역 — 분수 · 시장 · 대장간 · 종 · 강 · 바람."
+    key: [seq]
+    columns:
+      - {key: seq, type: u8, desc: "순서(1부터)", min: 1}
+      - {key: kind, type: "enum:AmbientKind", desc: "소리 종류"}
+      - {key: x, type: f32, desc: "중심 x(월드 칸)"}
+      - {key: y, type: f32, desc: "중심 y"}
+      - {key: radius, type: f32, desc: "들리는 반경(칸)"}
+  TownInfo:
+    source: mapgen
+    desc: "마을 자리 · 크기 · 훈련장(town.txt · anchors.txt yard)."
+    key: []
+    rows_exact: 1
+    columns:
+      - {key: zone_id, type: u16, desc: "Zone"}
+      - {key: x0, type: i16, desc: "원점 x(월드 칸)"}
+      - {key: y0, type: i16, desc: "원점 y"}
+      - {key: w, type: u16, desc: "너비"}
+      - {key: h, type: u16, desc: "높이"}
+      - {key: yard_x0, type: i16, desc: "훈련장 x0(포함)"}
+      - {key: yard_y0, type: i16, desc: "훈련장 y0"}
+      - {key: yard_x1, type: i16, desc: "훈련장 x1(포함)"}
+      - {key: yard_y1, type: i16, desc: "훈련장 y1"}
+  TownGrid:
+    source: mapgen
+    desc: "칸 격자(행 = y). ground = 바닥 · 막힘 문자, surface = 겉면, level = 층(0~4)."
+    key: [y]
+    columns:
+      - {key: y, type: u16, desc: "행(0부터)"}
+      - {key: ground, type: str, desc: "바닥 · 막힘(w글자)"}
+      - {key: surface, type: str, desc: "겉면(w글자)"}
+      - {key: level, type: str, desc: "층(w글자)"}
+  TownBuilding:
+    source: mapgen
+    desc: "건물(buildings.txt)."
+    key: [seq]
+    columns:
+      - {key: seq, type: u16, desc: "순서"}
+      - {key: kind, type: "enum:BuildingKind", desc: "종류"}
+      - {key: x0, type: i16, desc: "x0(포함)"}
+      - {key: y0, type: i16, desc: "y0"}
+      - {key: x1, type: i16, desc: "x1(포함)"}
+      - {key: y1, type: i16, desc: "y1"}
+      - {key: level, type: u8, desc: "발자국 층(0~4)"}
+      - {key: door, type: str, desc: "문 난 면(S · E · N · W)"}
+      - {key: variant, type: u8, desc: "모양 변형"}
+      - {key: sign, type: str, desc: "간판 글"}
+  TownSpawn:
+    source: mapgen
+    desc: "부활 · 귀환 · 첫 접속 자리."
+    key: [seq]
+    columns:
+      - {key: seq, type: u8, desc: "순서"}
+      - {key: x, type: i16, desc: "x"}
+      - {key: y, type: i16, desc: "y"}
+  TownDummy:
+    source: mapgen
+    desc: "훈련장 허수아비 자리."
+    key: [seq]
+    columns:
+      - {key: seq, type: u8, desc: "순서"}
+      - {key: x, type: i16, desc: "x"}
+      - {key: y, type: i16, desc: "y"}
+  TownSpot:
+    source: mapgen
+    desc: "이름 있는 자리(anchors.txt — 코드가 이름으로 부른다)."
+    key: [key]
+    columns:
+      - {key: key, type: str, desc: "이름(snake_case)"}
+      - {key: x, type: f32, desc: "x(소수 = 칸 사이)"}
+      - {key: y, type: f32, desc: "y"}
+  TownNpcHome:
+    source: mapgen
+    desc: "NPC 집(배회 중심, anchors.txt npc)."
+    key: [npc_id]
+    columns:
+      - {key: npc_id, type: u16, desc: "NPC"}
+      - {key: x, type: i16, desc: "x"}
+      - {key: y, type: i16, desc: "y"}
+  TownProp:
+    source: mapgen
+    desc: "소품(props.txt). 줄 소품은 x2 · y2가 다른 끝."
+    key: [seq]
+    columns:
+      - {key: seq, type: u16, desc: "순서"}
+      - {key: kind, type: "enum:PropKind", desc: "종류"}
+      - {key: x, type: i16, desc: "x"}
+      - {key: y, type: i16, desc: "y"}
+      - {key: x2, type: i16, desc: "다른 끝 x"}
+      - {key: y2, type: i16, desc: "다른 끝 y"}

@@ -1,0 +1,566 @@
+#include "pch.h"
+#include "Content/Npc/NpcHelper.h"
+#include "User/User.h"
+#include "User/UserHelper.h"
+#include "Network/GameSession.h"
+#include "Content/Field/Sector.h"
+#include "Worker/TimerThread.h"
+#include "Base/Core/CoreTLS.h"
+#include "Base/ServerGlobal.h"
+#include "Content/Combat/CombatHelper.h"
+#include "Content/Quest/QuestHelper.h"
+#include "Database/GameData/WorldData.h"
+#include "Database/GameData/NpcTalk.h"
+#include "Content/Navigator/Collision.h"
+
+#include <array>
+#include <queue>
+
+namespace
+{
+    using WorldData::NpcKind;
+
+    constexpr UInt32 kTickMs = 250;           // 사람이 있을 때
+    constexpr UInt32 kIdleTickMs = 1000;      // 마을이 비었을 때(NPC는 멈춰 있다)
+    constexpr UInt32 kTalkHoldMs = 15000;     // 말을 걸면 이만큼 멈춰 서서 바라본다
+    constexpr UInt32 kPetHoldMs = 3500;       // 동물을 쓰다듬으면
+    constexpr UInt32 kHealCooldownMs = 30000; // 사제 기도
+    constexpr UInt32 kSoupCooldownMs = 20000; // 여관 수프
+    constexpr UInt32   kSoupPrice = 30;
+    constexpr int      kGreetRange = 3;
+    constexpr int      kBarkAudience = 8;       // 이 거리 안에 사람이 있어야 혼잣말을 한다
+
+    struct Greeted { ObjID user; UInt32 at; };
+
+    struct TownNpc
+    {
+        const WorldData::NpcRow* row = nullptr;
+        short    x = 0, y = 0;
+        NpcActState state = NpcActState::Idle;
+        Int8   faceX = 0, faceY = 1;
+        UInt32 nextActAt = 0, nextStepAt = 0;
+        std::vector<std::pair<short, short>> path;
+        UInt32   talkUntil = 0;
+        ObjID    talkTo{};
+        UInt32   nextBarkAt = 0;
+        UInt32 greetReadyAt = 0;
+        std::vector<Greeted> greeted;
+    };
+
+    bool g_ready = false;
+    std::vector<TownNpc> g_npcs;
+    UInt32 g_tick = 0;
+    std::vector<UserSharedPtr> g_users;   // 이번 틱에 마을 근처에 있는 게임 안 사용자(틱마다 새로)
+    const ObjID kTickId(EnumCategory::eNone, 0x4E5043544943ull);   // "NPCTIC"
+
+    int Cheb(int ax, int ay, int bx, int by) { return (std::max)(std::abs(ax - bx), std::abs(ay - by)); }
+    int Sign(int v) { return (v > 0) - (v < 0); }
+    UInt32 Rand(UInt32 lo, UInt32 hi) { return hi > lo ? lo + static_cast<UInt32>(LRng() % (hi - lo + 1)) : lo; }
+
+    bool OnTownThread() { return g_ready && LCurrentZoneId == static_cast<ZoneId>(WorldData::kTownZoneId); }
+
+    TownNpc* FindTownNpc(UInt16 npcId)
+    {
+        for (auto& n : g_npcs)
+            if (n.row->id == npcId) return &n;
+        return nullptr;
+    }
+
+    bool IsHuman(const TownNpc& n) { return !WorldData::IsAnimal(n.row->kind); }
+
+    // 마을(+시야 여유) 섹터에 있는 게임 안 사용자
+    void CollectTownUsers()
+    {
+        g_users.clear();
+        const int margin = 10;
+        const short sx0 = static_cast<short>((WorldData::kTownX0 - margin) / SECTOR_RANGE);
+        const short sy0 = static_cast<short>((WorldData::kTownY0 - margin) / SECTOR_RANGE);
+        const short sx1 = static_cast<short>((WorldData::kTownX0 + WorldData::kTownW + margin) / SECTOR_RANGE);
+        const short sy1 = static_cast<short>((WorldData::kTownY0 + WorldData::kTownH + margin) / SECTOR_RANGE);
+        const CSector& sector = *GSector;
+        for (short sy = sy0; sy <= sy1; ++sy)
+            for (short sx = sx0; sx <= sx1; ++sx)
+            {
+                if (!sector.IsValidSector(sx, sy))
+                    continue;
+                sector.ForEachObjectInCell(sx, sy, EnumCategory::eUser, [&](const SubjectSharedPtr& object)
+                {
+                    auto user = static_pointer_cast<CUser>(object);
+                    auto session = user->GetGameSession();
+                    if (!session || session->m_eState != SOCKET_STATE::ST_INGAME)
+                        return;
+                    g_users.push_back(std::move(user));
+                });
+            }
+    }
+
+    NPC_ENTRY EntryOf(const TownNpc& n)
+    {
+        NPC_ENTRY e{};
+        e.npcId = n.row->id;
+        e.x = n.x;
+        e.y = n.y;
+        e.state = static_cast<UInt8>(n.state);
+        e.faceX = n.faceX;
+        e.faceY = n.faceY;
+        return e;
+    }
+
+    void SendList(const UserSharedPtr& user)
+    {
+        auto session = user->GetGameSession();
+        if (!session) return;
+        // Phase 4-B: 주민이 한 패킷(24명 · 220B)보다 많다 — 24명씩 나눠 여러 번 보낸다. 클라는 항목마다 합친다(지우지 않는다)
+        // → 패킷 모양 · 크기 변경 없음. 33명 = 두 번.
+        for (size_t at = 0; at < g_npcs.size(); at += kNpcListMax)
+        {
+            NPC_LIST_NFY_PACKET packet{};
+            packet.size = sizeof(packet);
+            packet.type = static_cast<char>(PacketType::NPC_LIST_NFY);
+            for (size_t i = at; i < g_npcs.size() && packet.count < kNpcListMax; ++i)
+                packet.npcs[packet.count++] = EntryOf(g_npcs[i]);
+            session->PostSend(packet);
+        }
+    }
+
+    void BroadcastState(const TownNpc& n, UInt16 stepMs)
+    {
+        NPC_STATE_NFY_PACKET packet{};
+        packet.size = sizeof(packet);
+        packet.type = static_cast<char>(PacketType::NPC_STATE_NFY);
+        packet.npc = EntryOf(n);
+        packet.stepMs = stepMs;
+        packet.talkTo = n.talkTo;
+        for (const auto& u : g_users)
+            if (auto session = u->GetGameSession())
+                session->PostSend(packet);
+    }
+
+    void Bark(TownNpc& n, UInt8 line, const ObjID& toUser)
+    {
+        NPC_BARK_NFY_PACKET packet{};
+        packet.size = sizeof(packet);
+        packet.type = static_cast<char>(PacketType::NPC_BARK_NFY);
+        packet.npcId = n.row->id;
+        packet.line = line;
+        packet.toUser = toUser;
+        for (const auto& u : g_users)
+            if (Cheb(u->GetX(), u->GetY(), n.x, n.y) <= GViewRange + 3)
+                if (auto session = u->GetGameSession())
+                    session->PostSend(packet);
+    }
+
+    bool OccupiedByNpc(int x, int y, const TownNpc* self)
+    {
+        for (const auto& o : g_npcs)
+            if (&o != self && o.x == x && o.y == y) return true;
+        return false;
+    }
+
+    bool Walkable(int x, int y)
+    {
+        return WorldData::IsInTown(x, y) && !WorldData::IsBlocked(x, y) && WorldData::TownCell(x, y) != 'G';
+    }
+
+    // 집 주변 상자 안에서 8방향 너비 우선 탐색(모서리 끊기 없음). 경로는 시작 칸 제외.
+    bool FindPath(const TownNpc& n, int tx, int ty, std::vector<std::pair<short, short>>& out)
+    {
+        const int r = n.row->wander + 1;
+        const int x0 = n.row->x - r, y0 = n.row->y - r;
+        const int w = r * 2 + 1;
+        if (std::abs(tx - n.row->x) > r || std::abs(ty - n.row->y) > r || std::abs(n.x - n.row->x) > r || std::abs(n.y - n.row->y) > r)
+            return false;
+        std::vector<int> prev(static_cast<size_t>(w * w), -2);
+        auto idx = [&](int x, int y) { return (y - y0) * w + (x - x0); };
+        std::queue<std::pair<int, int>> q;
+        q.push({ n.x, n.y });
+        prev[static_cast<size_t>(idx(n.x, n.y))] = -1;
+        static constexpr int kDx[8] = { 1, -1, 0, 0, 1, 1, -1, -1 };
+        static constexpr int kDy[8] = { 0, 0, 1, -1, 1, -1, 1, -1 };
+        bool found = false;
+        while (!q.empty())
+        {
+            const auto [cx, cy] = q.front();
+            q.pop();
+            if (cx == tx && cy == ty) { found = true; break; }
+            for (int d = 0; d < 8; ++d)
+            {
+                const int nx = cx + kDx[d], ny = cy + kDy[d];
+                if (nx < x0 || ny < y0 || nx >= x0 + w || ny >= y0 + w) continue;
+                if (prev[static_cast<size_t>(idx(nx, ny))] != -2 || !Walkable(nx, ny)) continue;
+                if (d >= 4 && (!Walkable(cx + kDx[d], cy) || !Walkable(cx, cy + kDy[d]))) continue;
+                prev[static_cast<size_t>(idx(nx, ny))] = idx(cx, cy);
+                q.push({ nx, ny });
+            }
+        }
+        if (!found)
+            return false;
+        out.clear();
+        for (int at = idx(tx, ty); at != idx(n.x, n.y) && at >= 0; at = prev[static_cast<size_t>(at)])
+            out.emplace_back(static_cast<short>(x0 + at % w), static_cast<short>(y0 + at / w));
+        std::reverse(out.begin(), out.end());
+        if (out.size() > 14) out.resize(14);
+        return !out.empty();
+    }
+
+    UInt32 IdleTime(const TownNpc& n)
+    {
+        switch (n.row->kind)
+        {
+        case NpcKind::eChild:   return Rand(300, 1600);
+        case NpcKind::eDog:     return Rand(600, 2600);
+        case NpcKind::eChicken: return Rand(700, 3200);
+        case NpcKind::eCat:     return Rand(5000, 14000);
+        case NpcKind::eBard:    return Rand(6000, 12000);
+        case NpcKind::eMerchant: case NpcKind::eWeaponSmith: case NpcKind::eTeleporter: return Rand(5000, 11000);
+        default:                return Rand(2500, 7000);
+        }
+    }
+
+    UserSharedPtr NearestUser(const TownNpc& n, int within)
+    {
+        UserSharedPtr best;
+        int bestD = within + 1;
+        for (const auto& u : g_users)
+        {
+            if (u->GetStat()->IsDead()) continue;
+            const int d = Cheb(u->GetX(), u->GetY(), n.x, n.y);
+            if (d < bestD) { bestD = d; best = u; }
+        }
+        return best;
+    }
+
+    void PickWalk(TownNpc& n, UInt32 now)
+    {
+        const int r = n.row->wander;
+        int tx = n.x, ty = n.y;
+        bool chosen = false;
+        // 개: 가까운 사람을 따라다닌다 / 아이: 가끔 다른 아이를 쫓는다
+        if (n.row->kind == NpcKind::eDog && Rand(0, 99) < 65)
+            if (auto u = NearestUser(n, 6))
+            {
+                tx = u->GetX() + static_cast<int>(Rand(0, 2)) - 1;
+                ty = u->GetY() + static_cast<int>(Rand(0, 2)) - 1;
+                chosen = true;
+            }
+        if (!chosen && n.row->kind == NpcKind::eChild && Rand(0, 99) < 45)
+            for (const auto& o : g_npcs)
+                if (&o != &n && o.row->kind == NpcKind::eChild)
+                {
+                    tx = o.x + static_cast<int>(Rand(0, 2)) - 1;
+                    ty = o.y + static_cast<int>(Rand(0, 2)) - 1;
+                    chosen = true;
+                    break;
+                }
+        for (int attempt = 0; attempt < 8; ++attempt)
+        {
+            if (!chosen)
+            {
+                const int reach = n.row->kind == NpcKind::eChicken ? (std::min)(r, 2) : r;
+                tx = n.row->x + static_cast<int>(Rand(0, static_cast<UInt32>(reach * 2))) - reach;
+                ty = n.row->y + static_cast<int>(Rand(0, static_cast<UInt32>(reach * 2))) - reach;
+            }
+            chosen = false;
+            if ((tx == n.x && ty == n.y) || !Walkable(tx, ty) || OccupiedByNpc(tx, ty, &n))
+                continue;
+            if (FindPath(n, tx, ty, n.path))
+            {
+                n.nextStepAt = now;
+                return;
+            }
+        }
+        n.nextActAt = now + IdleTime(n);   // 갈 곳이 없으면 조금 쉬었다가
+    }
+
+    void TryGreet(TownNpc& n, UInt32 now)
+    {
+        if (now < n.greetReadyAt)
+            return;
+        // 오래된 인사 기록 정리(1분)
+        n.greeted.erase(std::remove_if(n.greeted.begin(), n.greeted.end(), [&](const Greeted& g) { return now - g.at > 60000; }), n.greeted.end());
+        for (const auto& u : g_users)
+        {
+            if (u->GetStat()->IsDead() || Cheb(u->GetX(), u->GetY(), n.x, n.y) > kGreetRange)
+                continue;
+            const bool already = std::any_of(n.greeted.begin(), n.greeted.end(), [&](const Greeted& g) { return g.user == u->GetObjID(); });
+            if (already)
+                continue;
+            n.greeted.push_back(Greeted{ u->GetObjID(), now });
+            n.greetReadyAt = now + 8000;
+            // 돌아보고 인사(동물은 반가워하는 소리)
+            n.faceX = static_cast<Int8>(Sign(u->GetX() - n.x));
+            n.faceY = static_cast<Int8>(Sign(u->GetY() - n.y));
+            BroadcastState(n, 0);
+            if (IsHuman(n))
+                Bark(n, kNpcGreetLine, u->GetObjID());
+            else
+                Bark(n, static_cast<UInt8>(NpcTalk::BarkCount(n.row->id) - 1), u->GetObjID());
+            n.nextActAt = (std::max)(n.nextActAt, now + 1500);
+            return;
+        }
+    }
+
+    void UpdateNpc(TownNpc& n, UInt32 now)
+    {
+        // 대화 중: 시간이 지났거나 상대가 멀어지면 풀린다
+        if (n.state == NpcActState::Talk)
+        {
+            bool keep = now < n.talkUntil;
+            if (keep)
+            {
+                keep = false;
+                for (const auto& u : g_users)
+                    if (u->GetObjID() == n.talkTo && Cheb(u->GetX(), u->GetY(), n.x, n.y) <= WorldData::kNpcInteractRange + 2)
+                        keep = true;
+            }
+            if (!keep)
+            {
+                n.state = NpcActState::Idle;
+                n.talkTo = ObjID{};
+                n.nextActAt = now + Rand(1200, 3000);
+                BroadcastState(n, 0);
+            }
+            return;
+        }
+        // 걷는 중
+        if (!n.path.empty())
+        {
+            if (now < n.nextStepAt)
+                return;
+            const auto [nx, ny] = n.path.front();
+            if (OccupiedByNpc(nx, ny, &n) || !Walkable(nx, ny))
+            {
+                // 길이 막혔다(다른 NPC) — 멈추고 다시 생각한다
+                n.path.clear();
+                n.state = NpcActState::Idle;
+                n.nextActAt = now + Rand(400, 1200);
+                BroadcastState(n, 0);
+                return;
+            }
+            n.path.erase(n.path.begin());
+            GuardTownMove("npc", n.x, n.y, nx, ny);
+            const int dx = nx - n.x, dy = ny - n.y;
+            n.faceX = static_cast<Int8>(Sign(dx));
+            n.faceY = static_cast<Int8>(Sign(dy));
+            n.x = nx;
+            n.y = ny;
+            const UInt32 step = (dx != 0 && dy != 0) ? n.row->stepMs * 1414u / 1000u : n.row->stepMs;
+            n.nextStepAt = now + step;
+            n.state = NpcActState::Walk;
+            BroadcastState(n, static_cast<UInt16>(step));
+            if (n.path.empty())
+                n.nextActAt = now + step + IdleTime(n);
+            return;
+        }
+        if (n.state == NpcActState::Walk && now >= n.nextStepAt)
+        {
+            n.state = NpcActState::Idle;   // 도착
+            BroadcastState(n, 0);
+        }
+        if (n.state != NpcActState::Idle)
+            return;
+
+        TryGreet(n, now);
+
+        // 혼잣말(보는 사람이 있을 때만)
+        if (now >= n.nextBarkAt)
+        {
+            const int count = NpcTalk::BarkCount(n.row->id);
+            if (count > 0 && NearestUser(n, kBarkAudience))
+                Bark(n, static_cast<UInt8>(Rand(0, static_cast<UInt32>(count - 1))), ObjID{});
+            const bool chatty = n.row->kind == NpcKind::eBard || n.row->kind == NpcKind::eChild || n.row->kind == NpcKind::eMerchant;
+            n.nextBarkAt = now + (chatty ? Rand(9000, 20000) : Rand(16000, 40000));
+        }
+
+        if (now < n.nextActAt || n.row->wander == 0)
+        {
+            // 제자리 NPC도 가끔 고개를 돌린다
+            if (n.row->wander == 0 && now >= n.nextActAt)
+            {
+                static constexpr Int8 kFace[4][2] = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
+                const auto& f = kFace[Rand(0, 3)];
+                n.faceX = f[0];
+                n.faceY = f[1];
+                n.nextActAt = now + Rand(4000, 9000);
+                BroadcastState(n, 0);
+            }
+            return;
+        }
+        // 다음 행동: 걷기(대부분) 또는 조금 더 쉬기
+        if (Rand(0, 99) < 70)
+            PickWalk(n, now);
+        else
+            n.nextActAt = now + IdleTime(n);
+    }
+}
+
+namespace CNpcHelper
+{
+    void InitForZone(UInt16 zoneId)
+    {
+        if (zoneId != static_cast<UInt16>(WorldData::kTownZoneId))
+            return;
+        const UInt32 now = GetNowTime();
+        g_npcs.clear();
+        g_npcs.reserve(WorldData::NpcCount());
+        for (const auto& row : WorldData::Npcs())
+        {
+            TownNpc n;
+            n.row = &row;
+            n.x = row.x;
+            n.y = row.y;
+            static constexpr Int8 kFace[4][2] = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
+            n.faceX = kFace[row.facing & 3][0];
+            n.faceY = kFace[row.facing & 3][1];
+            n.nextActAt = now + Rand(500, 4000);
+            n.nextBarkAt = now + Rand(4000, 20000);
+            g_npcs.push_back(std::move(n));
+        }
+        g_ready = true;
+        GTimerThread->ScheduleAfter(kTickId, std::chrono::milliseconds(kTickMs), TIMER_EVENT_TYPE::EV_NPC_TICK);
+        std::cout << "[Npc] " << g_npcs.size() << " town NPCs wandering (zone " << zoneId << ")\n";
+    }
+
+    void HandleTick()
+    {
+        if (!OnTownThread())
+            return;
+        ++g_tick;
+        const UInt32 now = GetNowTime();
+        CollectTownUsers();
+        // 마을에 막 들어온 사람에게 전체 목록(로그인·귀환·부활·걸어서 들어옴 모두)
+        for (auto& u : g_users)
+        {
+            if (u->m_NpcSeenTick + 3 < g_tick)
+                SendList(u);
+            u->m_NpcSeenTick = g_tick;
+        }
+        // 보는 사람이 없으면 NPC도 쉰다(서버 부하 0에 가깝게)
+        const bool anyone = !g_users.empty();
+        if (anyone)
+            for (auto& n : g_npcs)
+                UpdateNpc(n, now);
+        g_users.clear();
+        GTimerThread->ScheduleAfter(kTickId, std::chrono::milliseconds(anyone ? kTickMs : kIdleTickMs), TIMER_EVENT_TYPE::EV_NPC_TICK);
+    }
+
+    void HandleTalk(const UserSharedPtr& user, UInt16 npcId)
+    {
+        if (!user)
+            return;
+        auto session = user->GetGameSession();
+        if (!session)
+            return;
+        NPC_TALK_ACK_PACKET ack{};
+        ack.size = sizeof(ack);
+        ack.type = static_cast<char>(PacketType::NPC_TALK_ACK);
+        ack.npcId = npcId;
+        TownNpc* n = OnTownThread() ? FindTownNpc(npcId) : nullptr;
+        if (!n)
+            ack.result = static_cast<UInt8>(NpcTalkResult::Unknown);
+        else if (user->GetStat()->IsDead() || user->IsTransferring())
+            ack.result = static_cast<UInt8>(NpcTalkResult::Busy);
+        else if (Cheb(user->GetX(), user->GetY(), n->x, n->y) > WorldData::kNpcInteractRange + 1)
+            ack.result = static_cast<UInt8>(NpcTalkResult::TooFar);
+        else
+        {
+            ack.result = static_cast<UInt8>(NpcTalkResult::Ok);
+            const UInt32 now = GetNowTime();
+            n->path.clear();
+            n->state = NpcActState::Talk;
+            n->talkTo = user->GetObjID();
+            n->talkUntil = now + (IsHuman(*n) ? kTalkHoldMs : kPetHoldMs);
+            n->faceX = static_cast<Int8>(Sign(user->GetX() - n->x));
+            n->faceY = static_cast<Int8>(Sign(user->GetY() - n->y));
+            CollectTownUsers();
+            BroadcastState(*n, 0);
+            if (!IsHuman(*n))
+                Bark(*n, static_cast<UInt8>(Rand(0, static_cast<UInt32>((std::max)(0, NpcTalk::BarkCount(npcId) - 1)))), user->GetObjID());
+            g_users.clear();
+        }
+        session->PostSend(ack);
+        // 대화 목표(누렁이 쓰다듬기 등) — 결과 뒤에 진행을 알린다
+        if (ack.result == static_cast<UInt8>(NpcTalkResult::Ok))
+            CQuestHelper::OnTalk(user, npcId);
+    }
+
+    void HandleService(const UserSharedPtr& user, UInt16 npcId, UInt8 service)
+    {
+        if (!user)
+            return;
+        auto session = user->GetGameSession();
+        if (!session)
+            return;
+        NPC_SERVICE_ACK_PACKET ack{};
+        ack.size = sizeof(ack);
+        ack.type = static_cast<char>(PacketType::NPC_SERVICE_ACK);
+        ack.npcId = npcId;
+        ack.service = service;
+        auto reply = [&](NpcServiceResult r, UInt32 cooldownMs = 0)
+        {
+            ack.result = static_cast<UInt8>(r);
+            ack.cooldownMs = cooldownMs;
+            session->PostSend(ack);
+        };
+
+        TownNpc* n = OnTownThread() ? FindTownNpc(npcId) : nullptr;
+        if (!n || user->GetStat()->IsDead())
+            return reply(NpcServiceResult::Invalid);
+        if (Cheb(user->GetX(), user->GetY(), n->x, n->y) > WorldData::kNpcInteractRange + 1)
+            return reply(NpcServiceResult::TooFar);
+        const UInt32 now = GetNowTime();
+        const auto stat = user->GetStat();
+        const bool full = stat->GetHp() >= stat->GetMaxHp() && user->m_Mp >= user->m_Derived.maxMp;
+        switch (static_cast<WorldData::NpcService>(service))
+        {
+        case WorldData::NpcService::Heal:
+        {
+            if (n->row->kind != NpcKind::ePriest)
+                return reply(NpcServiceResult::Invalid);
+            if (now < user->m_NpcHealReadyAt)
+                return reply(NpcServiceResult::Cooldown, user->m_NpcHealReadyAt - now);
+            if (full)
+                return reply(NpcServiceResult::Full);
+            const UInt16 before = stat->GetHp();
+            stat->HealHp(stat->GetMaxHp(), stat->GetMaxHp());
+            user->m_Mp = user->m_Derived.maxMp;
+            user->m_NpcHealReadyAt = now + kHealCooldownMs;
+            CCombatHelper::SendResource(user);
+            CUserHelper::BroadcastEffect(user, user->GetObjID(), EffectId::PriestHeal, user->GetX(), user->GetY(), stat->GetHp() - before);
+            CollectTownUsers();
+            Bark(*n, 0, user->GetObjID());
+            g_users.clear();
+            return reply(NpcServiceResult::Ok, kHealCooldownMs);
+        }
+        case WorldData::NpcService::Soup:
+        {
+            if (n->row->kind != NpcKind::eInnkeeper)
+                return reply(NpcServiceResult::Invalid);
+            if (now < user->m_NpcSoupReadyAt)
+                return reply(NpcServiceResult::Cooldown, user->m_NpcSoupReadyAt - now);
+            if (full)
+                return reply(NpcServiceResult::Full);
+            if (!user->GetInventory()->TrySpendAdena(kSoupPrice, AdenaReason::Service))
+                return reply(NpcServiceResult::NoAdena);
+            const UInt16 before = stat->GetHp();
+            stat->HealHp(static_cast<UInt16>(stat->GetMaxHp() * 40u / 100u), stat->GetMaxHp());
+            user->m_Mp = static_cast<UInt16>(std::min<UInt32>(user->m_Derived.maxMp, user->m_Mp + user->m_Derived.maxMp * 40u / 100u));
+            user->m_NpcSoupReadyAt = now + kSoupCooldownMs;
+            CCombatHelper::SendResource(user);
+            CUserHelper::BroadcastEffect(user, user->GetObjID(), EffectId::PotionHeal, user->GetX(), user->GetY(), stat->GetHp() - before);
+            return reply(NpcServiceResult::Ok, kSoupCooldownMs);
+        }
+        default:
+            return reply(NpcServiceResult::Invalid);
+        }
+    }
+
+    bool IsNear(UInt16 npcId, int x, int y)
+    {
+        if (OnTownThread())
+            if (const TownNpc* n = FindTownNpc(npcId))
+                return Cheb(x, y, n->x, n->y) <= WorldData::kNpcInteractRange + 1;
+        const auto* row = WorldData::FindNpc(npcId);
+        return row != nullptr && WorldData::IsNearNpc(*row, x, y);
+    }
+}

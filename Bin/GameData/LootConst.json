@@ -1,0 +1,3 @@
+{"table": "LootConst", "rows": [
+{"rare_pity": 20, "heroic_pity": 20, "class_swap_percent": 60, "level_gap": 10, "elite_permille": 20, "elite_min_tier": 2, "elite_hp_percent": 400, "elite_attack_percent": 150, "elite_level_bonus": 3, "elite_exp_percent": 300, "elite_adena_percent": 300, "elite_share_percent": 10, "boss_share_percent": 3, "shard_item": 66, "traded_dismantle_percent": 50}
+]}

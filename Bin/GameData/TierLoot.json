@@ -1,0 +1,7 @@
+{"table": "TierLoot", "rows": [
+{"tier": 1, "common_bp": 45, "uncommon_bp": 42, "rare_bp": 0, "essence_item": 61, "essence_permille": 300, "crystal_item": 0, "crystal_permille": 0, "elite_crystal_item": 0, "elite_crystal_count": 0, "elite_essence_count": 5, "elite_gear_percent": 0},
+{"tier": 2, "common_bp": 45, "uncommon_bp": 30, "rare_bp": 12, "essence_item": 61, "essence_permille": 300, "crystal_item": 64, "crystal_permille": 3, "elite_crystal_item": 64, "elite_crystal_count": 1, "elite_essence_count": 5, "elite_gear_percent": 10},
+{"tier": 3, "common_bp": 45, "uncommon_bp": 30, "rare_bp": 12, "essence_item": 62, "essence_permille": 250, "crystal_item": 64, "crystal_permille": 3, "elite_crystal_item": 64, "elite_crystal_count": 1, "elite_essence_count": 5, "elite_gear_percent": 6},
+{"tier": 4, "common_bp": 45, "uncommon_bp": 30, "rare_bp": 12, "essence_item": 63, "essence_permille": 200, "crystal_item": 65, "crystal_permille": 2, "elite_crystal_item": 65, "elite_crystal_count": 1, "elite_essence_count": 5, "elite_gear_percent": 5},
+{"tier": 5, "common_bp": 45, "uncommon_bp": 30, "rare_bp": 12, "essence_item": 63, "essence_permille": 200, "crystal_item": 65, "crystal_permille": 2, "elite_crystal_item": 65, "elite_crystal_count": 1, "elite_essence_count": 5, "elite_gear_percent": 5}
+]}

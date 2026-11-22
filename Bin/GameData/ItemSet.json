@@ -1,0 +1,5 @@
+{"table": "ItemSet", "rows": [
+{"id": 1, "name": "서약의 갑주", "piece_1": 47, "piece_2": 48, "piece_3": 49, "piece_4": 50, "two_1_kind": "Vit", "two_1_value": 4, "two_2_kind": "MaxHp", "two_2_value": 12, "four_1_kind": "Armor", "four_1_value": 15, "four_2_kind": "StatusResist", "four_2_value": 10, "four_proc": "Guardian", "color": "#D9B77A"},
+{"id": 2, "name": "이레린의 노래", "piece_1": 51, "piece_2": 52, "piece_3": 53, "piece_4": 54, "two_1_kind": "Int", "two_1_value": 5, "two_2_kind": "MaxMp", "two_2_value": 15, "four_1_kind": "CooldownReduction", "four_1_value": 8, "four_2_kind": "Magic", "four_2_value": 20, "four_proc": "Thunder", "color": "#7FC4B8"},
+{"id": 3, "name": "은늑대", "piece_1": 55, "piece_2": 56, "piece_3": 57, "piece_4": 58, "two_1_kind": "Dex", "two_1_value": 5, "two_2_kind": "CritChance", "two_2_value": 30, "four_1_kind": "CritDamage", "four_1_value": 25, "four_2_kind": "MoveSpeed", "four_2_value": 6, "four_proc": "Venom", "color": "#B8C4CC"}
+]}

@@ -1,0 +1,153 @@
+# 스키마 — 아이템 묶음. 열 순서 = Canon_Item.h.
+bundle: item
+tabs:
+  Item:
+    source: sheet
+    desc: "아이템. id는 DB · 패킷에 저장된다 — 영구(바꾸거나 다시 쓰지 않는다)."
+    key: [id]
+    id_lock: true
+    code_names: {header: ItemIds.h, ns: "ItemTableData::Id", type: ItemTableId, include: "Database/GameData/Item/ItemTableRow.h"}
+    columns:
+      - {key: id, type: u16, desc: "아이템 id(0 불가), 영구", min: 1}
+      - {key: code_name, type: "str?", desc: "코드가 부르는 이름(ItemTableData::Id::이것)", pattern: "^[A-Z][A-Za-z0-9]*$", default: null}
+      - {key: type, type: "enum:ItemType", desc: "종류"}
+      - {key: max_stack, type: u16, desc: "최대 겹치기(1 = 불가, 장비는 1)", min: 1}
+      - {key: name, type: str, desc: "서버 이름(영문 ASCII 19바이트 이하 — 패킷 name[20])", max_bytes: 19, ascii: true, nonempty: true}
+      - {key: grade, type: "enum:ItemGrade", desc: "등급(장비: eNone 일반 · eRare 고급 · eEpic 희귀 · eUnique 영웅 · eLegendary 전설 · eMythic 신화 = 바닥 희귀도. 재료는 표시 색 전용)"}
+      - {key: attack_bonus, type: u16, desc: "장착 공격력(무기만)"}
+      - {key: heal_amount, type: u16, desc: "사용 시 HP 회복(소비)"}
+      - {key: effect, type: "enum:ItemEffect", desc: "사용 효과"}
+      - {key: effect_value, type: u16, desc: "효과 수치(가속 초 · 축복 여부 등)"}
+      - {key: buy_price, type: u32, desc: "상점 판매가(살 때, 0 = 팔지 않음)"}
+      - {key: sell_price, type: u32, desc: "상점 매입가(팔 때, 0 = 못 판다, ≤ 판매가)"}
+      - {key: display_name, type: str, desc: "표시 이름(한글, 클라)", nonempty: true}
+      - {key: icon_id, type: u8, desc: "아이콘 번호(클라)"}
+      - {key: equip_slot, type: "enum:EquipSlot", desc: "장비 부위(장비인데 None = 무기)"}
+      - {key: weapon_kind, type: "enum:WeaponKind", desc: "무기 종류(무기만)"}
+      - {key: armor_bonus, type: u16, desc: "방어력"}
+      - {key: magic_armor_bonus, type: u16, desc: "마법 방어력"}
+      - {key: tier, type: u8, desc: "단계 1~5(옵션 수치) — 장비는 등급 단계(일반 1 · 고급 2 · 희귀 3 · 영웅 4 · 전설 · 신화 5)", min: 1, max: 5}
+      - {key: set_id, type: u8, desc: "세트(ItemSet.id, 0 = 없음)", ref: ItemSet, ref_zero: true}
+      - {key: class_mask, type: "mask:ClassId", desc: "착용 직업(비우면 모두 — 예: Knight|NightHunter)", default: ""}
+      - {key: req_level, type: u8, desc: "착용 레벨"}
+      - {key: rank, type: u8, desc: "단(장비: 1 하 · 2 중 · 3 상, 장비가 아니면 0)", max: 3}
+      - {key: route, type: "flags:ItemRoute", desc: "얻는 길(장비만 — Shop · Field · Elite · Boss · Craft · Quest, 여러 개는 Field|Craft, 비우면 없음)", default: ""}
+      - {key: bind, type: "enum:ItemBind", desc: "귀속(eAcquire = 얻는 순간 귀속 — 겹치는 아이템은 재료만)", default: "eNone"}
+  ItemOption:
+    source: sheet
+    desc: "무작위 옵션 종류(행 수 = ItemOption::Count, 행 순서 = id)."
+    key: [id]
+    columns:
+      - {key: id, type: "enum:ItemOption", desc: "옵션"}
+      - {key: name, type: str, desc: "이름"}
+      - {key: lo, type: u8, desc: "굴림 최소(1단계 · 희귀 기준)"}
+      - {key: hi, type: u8, desc: "굴림 최대(1단계 · 희귀 기준)"}
+      - {key: cap, type: u8, desc: "한 줄 최대 값(0 = 제한 없음)"}
+      - {key: unit, type: u8, desc: "적용 배수(최대 HP ×5 등)"}
+      - {key: display, type: u8, desc: "표시: 0 +N · 1 +N% · 2 +N‰", max: 2}
+  ItemProc:
+    source: sheet
+    desc: "특수 효과(행 수 = ItemProc::Count, 행 순서 = id)."
+    key: [id]
+    columns:
+      - {key: id, type: "enum:ItemProc", desc: "특수 효과"}
+      - {key: name, type: str, desc: "이름"}
+      - {key: chance, type: u8, desc: "발동 확률(%)"}
+      - {key: chance_emp, type: u8, desc: "강화(신화) 발동 확률(%)"}
+      - {key: power, type: u8, desc: "효과 크기(%)"}
+      - {key: power_emp, type: u8, desc: "강화 효과 크기(%)"}
+      - {key: color, type: color, desc: "표시 색"}
+  ItemSet:
+    source: sheet
+    desc: "장비 세트(id 1~3 — 착용 집계 배열 setCount[4]가 구조 상한)."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u8, desc: "세트 id(1~3)", min: 1, max: 3}
+      - {key: name, type: str, desc: "이름"}
+      - {key: piece_1, type: u16, desc: "부위 1", ref: Item, ref_zero: true}
+      - {key: piece_2, type: u16, desc: "부위 2", ref: Item, ref_zero: true}
+      - {key: piece_3, type: u16, desc: "부위 3", ref: Item, ref_zero: true}
+      - {key: piece_4, type: u16, desc: "부위 4", ref: Item, ref_zero: true}
+      - {key: two_1_kind, type: "enum:ItemOption", desc: "2부위 효과 1 종류"}
+      - {key: two_1_value, type: u8, desc: "2부위 효과 1 값"}
+      - {key: two_2_kind, type: "enum:ItemOption", desc: "2부위 효과 2 종류"}
+      - {key: two_2_value, type: u8, desc: "2부위 효과 2 값"}
+      - {key: four_1_kind, type: "enum:ItemOption", desc: "4부위 효과 1 종류"}
+      - {key: four_1_value, type: u8, desc: "4부위 효과 1 값"}
+      - {key: four_2_kind, type: "enum:ItemOption", desc: "4부위 효과 2 종류"}
+      - {key: four_2_value, type: u8, desc: "4부위 효과 2 값"}
+      - {key: four_proc, type: "enum:ItemProc", desc: "4부위 특수 효과"}
+      - {key: color, type: color, desc: "표시 색"}
+  Rarity:
+    source: sheet
+    desc: "희귀도(행 수 = Rarity::Count, 행 순서 = id)."
+    key: [id]
+    columns:
+      - {key: id, type: "enum:Rarity", desc: "희귀도"}
+      - {key: name, type: str, desc: "이름"}
+      - {key: color, type: color, desc: "표시 색"}
+      - {key: option_count, type: u8, desc: "무작위 옵션 수(≤ 4 — 구조 상한)", max: 4}
+      - {key: sell_percent, type: u16, desc: "매입가 배율(%)"}
+      - {key: loot_notice, type: bool, desc: "몬스터에게서 얻으면 시스템 채팅으로 누가 무엇을 얻었는지 모두에게 알린다", default: false}
+  RarityStep:
+    source: sheet
+    desc: "드롭 희귀도 굴림 — 바닥 위로 +0~+4 단계 가중치(천분율). id 0~5 = 몬스터 단계(0은 1단계와 같음), 6 = 보스."
+    key: [id]
+    rows_exact: 7
+    columns:
+      - {key: id, type: u8, desc: "단계(0~5) · 6 = 보스", max: 6}
+      - {key: w_plus0, type: u16, desc: "+0 가중치"}
+      - {key: w_plus1, type: u16, desc: "+1 가중치"}
+      - {key: w_plus2, type: u16, desc: "+2 가중치"}
+      - {key: w_plus3, type: u16, desc: "+3 가중치"}
+      - {key: w_plus4, type: u16, desc: "+4 가중치"}
+  Enchant:
+    source: sheet
+    desc: "강화 단계별 규칙(대장간 — 강화권 · 보호권). 행 = 지금 강화 수치(+0부터 연속). 마지막 행이 그 위 모든 단계에 적용된다."
+    key: [level]
+    columns:
+      - {key: level, type: u8, desc: "지금 강화 수치(+0부터 연속 — 마지막 행이 그 위 단계 모두)"}
+      - {key: success_tickets, type: u64, desc: "다음 단계로 오를 성공 몫(1조 = 100% · 1 = 1조분의 1)", max: 1000000000000}
+      - {key: grace_attempts, type: u16, desc: "하르벤의 가호 — N-1번 연속 실패 뒤 N번째는 반드시 성공(0 = 없음)"}
+      - {key: stat_gain, type: u16, desc: "이 단계에서 한 단계 오를 때 더하는 성능(무기 공격력 · 방어구 방어력)"}
+  EnchantConst:
+    source: sheet
+    desc: "강화 상수(한 행)."
+    key: []
+    rows_exact: 1
+    columns:
+      - {key: world_notice_level, type: u32, desc: "성공하면 서버 전체에 알리는 강화 수치(이 수치 이상)", min: 1}
+      - {key: first_notice_level, type: u32, desc: "아이템마다 처음 도달한 사람을 기록하는 강화 수치(이 수치 이상)", min: 1}
+      - {key: gain_per_further_level, type: u16, desc: "표 마지막 행 위로 한 단계마다 더 붙는 성능 증가량"}
+      - {key: accessory_hp_per_point, type: u16, desc: "장신구(목걸이 · 반지) 강화 성능 1당 최대 HP"}
+      - {key: accessory_mp_per_point, type: u16, desc: "장신구(목걸이 · 반지) 강화 성능 1당 최대 MP"}
+  DropTable:
+    source: sheet
+    desc: "드롭 표(몬스터 Monster.drop_table이 가리킨다). 굴림 한 번 = 없음 또는 아이템 하나."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u8, desc: "표 번호(1부터 연속)", min: 1}
+      - {key: no_drop_weight, type: u32, desc: "아무것도 안 나옴 가중치"}
+  DropEntry:
+    source: sheet
+    desc: "드롭 표의 아이템(가중치 = 상대 확률). seq는 1부터 연속."
+    key: [table_id, seq]
+    child_of: {tab: DropTable, key: table_id}
+    columns:
+      - {key: table_id, type: u8, desc: "드롭 표", ref: DropTable}
+      - {key: seq, type: u8, desc: "순서(1부터)", min: 1}
+      - {key: item_id, type: u16, desc: "아이템", ref: Item}
+      - {key: weight, type: u32, desc: "가중치"}
+      - {key: min_count, type: u16, desc: "최소 개수(≥ 1)", min: 1}
+      - {key: max_count, type: u16, desc: "최대 개수(≤ 아이템 최대 겹치기)", min: 1}
+  Shop:
+    source: sheet
+    desc: "상점 목록(NPC마다 최대 16 — 구조 상한). seq는 1부터 연속."
+    key: [npc_id, seq]
+    child_of: {tab: Npc, key: npc_id, max: 16}
+    columns:
+      - {key: npc_id, type: u16, desc: "상인 NPC", ref: Npc}
+      - {key: seq, type: u8, desc: "진열 순서(1부터)", min: 1, max: 16}
+      - {key: item_id, type: u16, desc: "아이템", ref: Item}

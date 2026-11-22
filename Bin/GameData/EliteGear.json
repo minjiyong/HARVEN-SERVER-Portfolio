@@ -1,0 +1,11 @@
+{"table": "EliteGear", "rows": [
+{"tier": 2, "seq": 1, "grade": "eRare", "rank": 3, "weight": 60},
+{"tier": 2, "seq": 2, "grade": "eEpic", "rank": 1, "weight": 40},
+{"tier": 3, "seq": 1, "grade": "eEpic", "rank": 3, "weight": 50},
+{"tier": 3, "seq": 2, "grade": "eEpic", "rank": 1, "weight": 30},
+{"tier": 3, "seq": 3, "grade": "eUnique", "rank": 1, "weight": 20},
+{"tier": 4, "seq": 1, "grade": "eUnique", "rank": 1, "weight": 80},
+{"tier": 4, "seq": 2, "grade": "eEpic", "rank": 3, "weight": 20},
+{"tier": 5, "seq": 1, "grade": "eUnique", "rank": 1, "weight": 80},
+{"tier": 5, "seq": 2, "grade": "eEpic", "rank": 3, "weight": 20}
+]}

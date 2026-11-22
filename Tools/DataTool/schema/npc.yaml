@@ -1,0 +1,31 @@
+# 스키마 — NPC대사 묶음(Npc · NpcLine). 열 순서 = Canon_Npc.h.
+# NPC 집 자리(x, y)는 마을 원본(mapgen TownNpcHome)이 주인 — 여기 두지 않는다.
+bundle: npc
+tabs:
+  Npc:
+    source: sheet
+    desc: "마을 NPC(1~63, 최대 48명). 자리는 마을 원본(anchors.txt)에서 온다."
+    key: [id]
+    id_lock: true
+    code_names: {header: NpcIds.h, ns: "NpcIds", type: uint16_t}
+    columns:
+      - {key: id, type: u16, desc: "NPC id(1~63), 영구", min: 1, max: 63}
+      - {key: code_name, type: "str?", desc: "코드가 부르는 이름(NpcIds::이것)", pattern: "^[A-Z][A-Za-z0-9]*$", default: null}
+      - {key: kind, type: "enum:NpcKind", desc: "종류"}
+      - {key: name, type: str, desc: "이름", nonempty: true}
+      - {key: facing, type: u8, desc: "바라보는 쪽(0 남서 · 1 남동 · 2 북동 · 3 북서)", max: 3}
+      - {key: greeting, type: str, desc: "인사말"}
+      - {key: wander, type: u8, desc: "배회 반경(칸, 0 = 제자리)"}
+      - {key: step_ms, type: u16, desc: "한 칸 걷는 시간(ms)"}
+      - {key: color, type: color, desc: "옷 색(#000000 = 종류 기본)"}
+      - {key: role, type: "str?", desc: "머리 위 둘째 줄(비우면 종류 기본)", default: null}
+  NpcLine:
+    source: sheet
+    desc: "NPC 대사 — talk(대화, 최대 5) · bark(혼잣말, 최대 4). seq는 종류마다 1부터 연속."
+    key: [npc_id, kind, seq]
+    child_of: {tab: Npc, key: npc_id}
+    columns:
+      - {key: npc_id, type: u16, desc: "NPC", ref: Npc}
+      - {key: kind, type: str, desc: "talk(대화) · bark(혼잣말)", values: [talk, bark]}
+      - {key: seq, type: u8, desc: "순서(1부터 — talk ≤ 5 · bark ≤ 4)", min: 1, max: 5}
+      - {key: text, type: str, desc: "대사", nonempty: true}

@@ -1,0 +1,103 @@
+# 스키마 — 결사 성장 묶음(GuildConst · GuildLevel · GuildMission · GuildShop · GuildAchievement · GuildTitle · GuildAttend). 열 순서 = Canon_Guild.h.
+# 패킷 줄 수 · 바이트 · 배열 상한(kMaxLevel 20 · kMissionSlotsMax 3 · 칭호 id 31 · 출석 단계 5 · 표 64행)은 구조 상수(Database/GameData/GuildGrowth.h) — 코드에 남는다.
+# 임무 · 상점 · 업적 · 칭호 id는 결사 진행(GuildProgress)에 저장된다 — id_lock(바꾸지 말고 deprecated로).
+bundle: guild
+tabs:
+  GuildConst:
+    source: sheet
+    desc: "결사 성장 상수(한 행) — 주 · 날 경계, 사냥 → 결사 경험치 · 기여도, 협력 처치, 출석 활동, 주간 임무 수 · 참여 덧보상, 결사장 위임 청구, 게시판 · 기록 · 가입 신청, 직위 권한 기본값."
+    key: []
+    rows_exact: 1
+    columns:
+      - {key: week_period_sec, type: u32, desc: "한 주(초 — 604800). 시험 데이터만 짧게", min: 60}
+      - {key: week_offset_sec, type: u32, desc: "주가 시작하는 때(유닉스 초 기준 어긋남 — 334800 = 월요일 06:00 KST)"}
+      - {key: day_period_sec, type: u32, desc: "하루(초 — 86400). 시험 데이터만 짧게", min: 60}
+      - {key: day_offset_sec, type: u32, desc: "하루가 시작하는 때(유닉스 초 기준 어긋남 — 75600 = 06:00 KST)"}
+      - {key: kill_exp_pct, type: u8, desc: "처치 → 결사 경험치(몬스터 경험치의 %, 함께 때린 결사원 수와 상관없이 한 마리에 한 번)", max: 100}
+      - {key: member_daily_exp_cap, type: u32, desc: "한 사람이 하루에 사냥으로 올려 줄 수 있는 결사 경험치(작업장 · 부캐 몰아주기 막기)"}
+      - {key: kill_contrib, type: u16, desc: "처치 한 번의 기여도(함께 때린 결사원마다)"}
+      - {key: boss_contrib, type: u16, desc: "보스 처치의 기여도"}
+      - {key: coop_new_days, type: u8, desc: "들어온 지 이 날 수 안이면 새 결사원(협력 처치)", min: 1}
+      - {key: coop_contrib_bonus, type: u16, desc: "새 결사원과 함께 쓰러뜨리면 덧붙는 기여도(둘 이상 함께 · 그중 새 결사원이 있을 때 모두에게)"}
+      - {key: attend_active_min, type: u16, desc: "하루 이만큼(분) 활동하면 출석 — 활동 = 그 1분 안에 몬스터를 함께 쓰러뜨림(접속만으로는 세지 않는다)", min: 1}
+      - {key: mission_slots, type: u8, desc: "한 주의 임무 수", min: 1, max: 3}
+      - {key: mission_bonus_members, type: u8, desc: "임무에 이만큼 이상(서로 다른 결사원) 참여하면 덧보상(0 = 없음)"}
+      - {key: mission_bonus_pct, type: u8, desc: "참여 덧보상 — 경험치 · 인장에 이 %를 더 준다"}
+      - {key: leader_absent_sec, type: u32, desc: "결사장이 이만큼(초) 들어오지 않으면 결사장을 뺀 가장 높은 직위가 위임을 청구할 수 있다", min: 60}
+      - {key: claim_grace_sec, type: u32, desc: "청구 뒤 기다리는 시간(초) — 그 사이 결사장이 들어오면 취소", min: 10}
+      - {key: post_max, type: u16, desc: "게시판 글 수(넘으면 고정하지 않은 가장 오래된 글부터 내린다)", min: 10, max: 200}
+      - {key: log_keep, type: u16, desc: "결사 기록을 남기는 줄 수(결사마다)", min: 20, max: 500}
+      - {key: apply_expire_sec, type: u32, desc: "가입 신청이 남아 있는 시간(초)", min: 60}
+      - {key: apply_max, type: u8, desc: "결사 하나의 대기 신청 수", min: 1, max: 8}
+      - {key: perm_officer, type: "flags:GuildPerm", desc: "부관 권한 기본값(결사장이 바꾸기 전)", default: ""}
+      - {key: perm_elite, type: "flags:GuildPerm", desc: "정예 권한 기본값", default: ""}
+      - {key: perm_member, type: "flags:GuildPerm", desc: "결사원 권한 기본값", default: ""}
+  GuildLevel:
+    source: sheet
+    desc: "결사 레벨(1부터 연속, 최대 20) — 누적 경험치 · 인원 한도 · 문장 테두리 · 여는 칭호."
+    key: [level]
+    columns:
+      - {key: level, type: u8, desc: "레벨(1부터 연속)", min: 1, max: 20}
+      - {key: exp, type: u32, desc: "이 레벨이 되는 누적 결사 경험치(1레벨 = 0, 늘어나야 한다)"}
+      - {key: max_members, type: u8, desc: "인원 한도(줄어들지 않는다 · 60 이하)", min: 2, max: 60}
+      - {key: frame, type: u8, desc: "문장 테두리 단계(0 없음 · 1 은 · 2 금 · 3 새벽빛)", max: 3}
+      - {key: title_id, type: u8, desc: "이 레벨이 되면 여는 칭호(0 = 없음)", ref: GuildTitle, ref_zero: true}
+  GuildMission:
+    source: sheet
+    desc: "주간 임무 풀 — 결사마다 한 주에 mission_slots개를 무게대로 뽑는다(결사 번호 · 주 번호로 정해진다). sub는 종류마다: Kill 최소 몬스터 레벨 · Collect 아이템 id(0 = 강화 재료) · Gear 최소 희귀도 · Active 한 사람의 활동 분."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u16, desc: "임무 id(영구)", min: 1}
+      - {key: name, type: str, desc: "이름(한글 10자 이하)", nonempty: true, max_bytes: 30}
+      - {key: kind, type: "enum:GuildMissionKind", desc: "종류"}
+      - {key: target, type: u32, desc: "목표(Active는 결사원 수)", min: 1}
+      - {key: sub, type: u32, desc: "종류마다의 조건(설명 참고)"}
+      - {key: min_level, type: u8, desc: "이 결사 레벨부터 뽑힌다", min: 1, max: 20}
+      - {key: exp, type: u32, desc: "달성 보상 — 결사 경험치"}
+      - {key: seals, type: u32, desc: "달성 보상 — 결사 인장(금고)"}
+      - {key: contrib, type: u16, desc: "달성하면 참여한 결사원마다 기여도"}
+      - {key: weight, type: u16, desc: "뽑힐 무게(0 = 뽑지 않음)"}
+  GuildShop:
+    source: sheet
+    desc: "결사 상점 — 금고의 결사 인장으로 산다(Shop 권한). 거래되는 최상급 장비 · 강한 전투 버프는 넣지 않는다(결사 크기 격차 · 부캐 악용)."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u16, desc: "상점 줄 id(영구)", min: 1}
+      - {key: item_id, type: u16, desc: "아이템", ref: Item}
+      - {key: count, type: u16, desc: "한 번에 받는 수량", min: 1}
+      - {key: price, type: u32, desc: "값(결사 인장)", min: 1}
+      - {key: min_level, type: u8, desc: "이 결사 레벨부터 보인다", min: 1, max: 20}
+      - {key: weekly_limit, type: u8, desc: "한 사람이 한 주에 살 수 있는 수(0 = 제한 없음)"}
+  GuildAchievement:
+    source: sheet
+    desc: "결사 업적 — 누적 기록이 target에 닿으면 한 번 이룬다(보상 인장 · 경험치 · 칭호)."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u16, desc: "업적 id(영구)", min: 1}
+      - {key: name, type: str, desc: "이름(한글 10자 이하)", nonempty: true, max_bytes: 30}
+      - {key: kind, type: "enum:GuildAchKind", desc: "무엇을 세는가"}
+      - {key: target, type: u32, desc: "목표", min: 1}
+      - {key: seals, type: u32, desc: "보상 — 결사 인장"}
+      - {key: exp, type: u32, desc: "보상 — 결사 경험치"}
+      - {key: title_id, type: u8, desc: "여는 칭호(0 = 없음)", ref: GuildTitle, ref_zero: true}
+  GuildTitle:
+    source: sheet
+    desc: "결사 칭호 — 결사 레벨 · 업적이 연다. 결사장이 하나를 골라 결사 이름 앞에 단다."
+    key: [id]
+    id_lock: true
+    columns:
+      - {key: id, type: u8, desc: "칭호 id(1~31, 영구)", min: 1, max: 31}
+      - {key: name, type: str, desc: "이름(한글 8자 이하)", nonempty: true, max_bytes: 24}
+  GuildAttend:
+    source: sheet
+    desc: "결사 출석 — 하루 출석한(attend_active_min 넘게 활동한) 결사원 수가 members에 닿으면 그 단계 보상(하루에 단계마다 한 번)."
+    key: [tier]
+    columns:
+      - {key: tier, type: u8, desc: "단계(1부터 연속, 최대 5)", min: 1, max: 5}
+      - {key: members, type: u8, desc: "필요한 출석 수(늘어나야 한다)", min: 1}
+      - {key: seals, type: u32, desc: "보상 — 결사 인장"}
+      - {key: exp, type: u32, desc: "보상 — 결사 경험치"}
+      - {key: contrib, type: u16, desc: "그날 출석한 사람마다 기여도"}

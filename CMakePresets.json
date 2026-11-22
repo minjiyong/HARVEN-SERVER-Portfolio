@@ -1,0 +1,81 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "linux-base",
+            "hidden": true,
+            "description": "공통 — Ninja · g++ · build/<프리셋 이름>. Visual Studio(원격 Linux · WSL)에서도 이 프리셋을 그대로 쓴다",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "HARVEN_IN_MEMORY_DB": "OFF",
+                "HARVEN_SANITIZER": ""
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [ "Linux" ]
+                },
+                "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+                    "sourceDir": "$env{HOME}/HARVEN-SERVER",
+                    "copySourcesOptions": {
+                        "method": "rsync",
+                        "outputVerbosity": "Normal",
+                        "exclusionList": [ ".vs", ".git", "build", "Build", "out" ]
+                    }
+                }
+            }
+        },
+        {
+            "name": "linux-release",
+            "inherits": "linux-base",
+            "displayName": "Linux Release (RDS · ODBC)",
+            "description": "운영 빌드(RDS)",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+        },
+        {
+            "name": "linux-debug",
+            "inherits": "linux-base",
+            "displayName": "Linux Debug (RDS · ODBC)",
+            "description": "디버거용 — _DEBUG 검사가 켜진다",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+        },
+        {
+            "name": "linux-debug-memory",
+            "inherits": "linux-base",
+            "displayName": "Linux Debug (메모리 DB)",
+            "description": "VS F5 디버깅용 — RDS 없이 _DEBUG 검사 + 인메모리 DB(데이터는 프로세스가 끝나면 사라진다)",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "HARVEN_IN_MEMORY_DB": "ON" }
+        },
+        {
+            "name": "linux-memory",
+            "inherits": "linux-base",
+            "displayName": "Linux Release (메모리 DB)",
+            "description": "RDS 없이 — 회귀 시험 · 강화 시험 · 부하 시험(데이터는 프로세스가 끝나면 사라진다)",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "HARVEN_IN_MEMORY_DB": "ON" }
+        },
+        {
+            "name": "linux-asan",
+            "inherits": "linux-base",
+            "displayName": "Linux ASan + UBSan (메모리 DB)",
+            "description": "메모리 오류 · 정의되지 않은 동작 검사 — _DEBUG 검사도 켠다",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "HARVEN_IN_MEMORY_DB": "ON", "HARVEN_SANITIZER": "address" }
+        },
+        {
+            "name": "linux-tsan",
+            "inherits": "linux-base",
+            "displayName": "Linux TSan (메모리 DB)",
+            "description": "스레드 경쟁 검사",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo", "HARVEN_IN_MEMORY_DB": "ON", "HARVEN_SANITIZER": "thread" }
+        }
+    ],
+    "buildPresets": [
+        { "name": "linux-release", "configurePreset": "linux-release" },
+        { "name": "linux-debug",   "configurePreset": "linux-debug" },
+        { "name": "linux-debug-memory", "configurePreset": "linux-debug-memory" },
+        { "name": "linux-memory",  "configurePreset": "linux-memory" },
+        { "name": "linux-asan",    "configurePreset": "linux-asan" },
+        { "name": "linux-tsan",    "configurePreset": "linux-tsan" }
+    ]
+}

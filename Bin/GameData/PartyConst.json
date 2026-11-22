@@ -1,0 +1,3 @@
+{"table": "PartyConst", "rows": [
+{"max_members": 8, "invite_expire_ms": 30000, "offline_keep_sec": 300, "sync_interval_ms": 500, "exp_share_range": 20, "carry_level_range": 20, "carry_min_exp_pct": 20, "loot_owner_ms": 10000, "loot_party_ms": 20000, "recruit_idle_sec": 600}
+]}

@@ -1,0 +1,16 @@
+{"table": "GuildMission", "rows": [
+{"id": 1, "name": "숲의 청소", "kind": "Kill", "target": 300, "sub": 0, "min_level": 1, "exp": 600, "seals": 60, "contrib": 10, "weight": 10},
+{"id": 2, "name": "몬스터 천 마리", "kind": "Kill", "target": 1000, "sub": 0, "min_level": 3, "exp": 1800, "seals": 150, "contrib": 20, "weight": 8},
+{"id": 3, "name": "강적 사냥", "kind": "Kill", "target": 300, "sub": 20, "min_level": 4, "exp": 1500, "seals": 140, "contrib": 20, "weight": 6},
+{"id": 4, "name": "거인 쓰러뜨리기", "kind": "Boss", "target": 1, "sub": 0, "min_level": 1, "exp": 800, "seals": 80, "contrib": 15, "weight": 6},
+{"id": 5, "name": "세 번의 토벌", "kind": "Boss", "target": 3, "sub": 0, "min_level": 5, "exp": 2000, "seals": 200, "contrib": 25, "weight": 5},
+{"id": 6, "name": "강화 재료 모으기", "kind": "Collect", "target": 30, "sub": 0, "min_level": 1, "exp": 500, "seals": 60, "contrib": 10, "weight": 8},
+{"id": 7, "name": "재료 이백 개", "kind": "Collect", "target": 200, "sub": 0, "min_level": 6, "exp": 2000, "seals": 200, "contrib": 25, "weight": 4},
+{"id": 8, "name": "희귀 장비 사냥", "kind": "Gear", "target": 10, "sub": 2, "min_level": 2, "exp": 900, "seals": 90, "contrib": 15, "weight": 6},
+{"id": 9, "name": "영웅의 흔적", "kind": "Gear", "target": 3, "sub": 3, "min_level": 6, "exp": 1600, "seals": 180, "contrib": 25, "weight": 3},
+{"id": 10, "name": "다섯이 함께", "kind": "Active", "target": 5, "sub": 30, "min_level": 1, "exp": 700, "seals": 70, "contrib": 10, "weight": 8},
+{"id": 11, "name": "모두의 한 주", "kind": "Active", "target": 10, "sub": 60, "min_level": 5, "exp": 2200, "seals": 220, "contrib": 25, "weight": 4},
+{"id": 12, "name": "의뢰 해결", "kind": "Quest", "target": 10, "sub": 0, "min_level": 1, "exp": 500, "seals": 50, "contrib": 10, "weight": 6},
+{"id": 13, "name": "의뢰 서른 건", "kind": "Quest", "target": 30, "sub": 0, "min_level": 4, "exp": 1400, "seals": 140, "contrib": 20, "weight": 4},
+{"id": 14, "name": "백 마리 사냥", "kind": "Kill", "target": 100, "sub": 0, "min_level": 1, "exp": 300, "seals": 40, "contrib": 5, "weight": 6}
+]}

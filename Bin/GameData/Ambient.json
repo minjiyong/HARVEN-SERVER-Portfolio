@@ -1,0 +1,16 @@
+{"table": "Ambient", "rows": [
+{"seq": 1, "kind": "eFountain", "x": 749.5, "y": 762.5, "radius": 11},
+{"seq": 2, "kind": "eMarket", "x": 728, "y": 761, "radius": 13},
+{"seq": 3, "kind": "eMarket", "x": 749, "y": 780, "radius": 8},
+{"seq": 4, "kind": "eMarket", "x": 783, "y": 778, "radius": 8},
+{"seq": 5, "kind": "eSmithy", "x": 765, "y": 754, "radius": 10},
+{"seq": 6, "kind": "eBell", "x": 769, "y": 720, "radius": 22},
+{"seq": 7, "kind": "eRiver", "x": 721, "y": 750, "radius": 10},
+{"seq": 8, "kind": "eRiver", "x": 721, "y": 764, "radius": 10},
+{"seq": 9, "kind": "eRiver", "x": 722, "y": 778, "radius": 10},
+{"seq": 10, "kind": "eRiver", "x": 714, "y": 746, "radius": 7},
+{"seq": 11, "kind": "eWind", "x": 717, "y": 722, "radius": 14},
+{"seq": 12, "kind": "eWind", "x": 787, "y": 718, "radius": 12},
+{"seq": 13, "kind": "eWind", "x": 748, "y": 726, "radius": 14},
+{"seq": 14, "kind": "eWind", "x": 748, "y": 738, "radius": 10}
+]}
