@@ -1,5 +1,7 @@
 # HARVEN · MMORPG Server
 
+[![Checks](https://github.com/minjiyong/HARVEN-SERVER-Portfolio/actions/workflows/checks.yml/badge.svg)](https://github.com/minjiyong/HARVEN-SERVER-Portfolio/actions/workflows/checks.yml)
+
 **C++20 · Boost.Asio · MySQL 기반 MMORPG 게임 서버입니다.**
 
 네트워크 세션, 작업 스레드와 메시지 큐, 게임 콘텐츠, DB 저장, 부하 도구 및 규칙 테스트를 함께 담았습니다. Windows IOCP 기반으로 시작한 프로젝트를 Linux·Boost.Asio 기반으로 이식한 개발본의 **포트폴리오용 소스 스냅샷**입니다. 현재 공개 코드의 네트워크 구현은 Boost.Asio입니다.

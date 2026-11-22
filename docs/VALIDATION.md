@@ -21,3 +21,9 @@
 - 개인 데이터 도구 설정의 폴더·시트 식별자는 빈 값으로 치환했습니다.
 
 원격 검사 결과는 [Actions](https://github.com/minjiyong/HARVEN-SERVER-Portfolio/actions)에서 확인합니다. 설정된 검사가 실제로 통과했는지는 원격 결과와 별도로 구분합니다.
+
+## GitHub Actions 실행 결과
+
+- 실제 원격 실행: **성공** — [검사 실행 기록](https://github.com/minjiyong/HARVEN-SERVER-Portfolio/actions/runs/45013364408)
+- Ubuntu 24.04에서 메모리 DB 서버·부하 도구와 테스트 실행 파일 빌드, 규칙·동시성 테스트 8종 실행을 완료했습니다.
+- 검사한 소스 커밋: `fe58911886f99f874cc74f41aa3c0c3f586a9506`. 이 결과를 추가하는 후속 변경은 문서만 수정합니다.
